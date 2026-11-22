@@ -1,0 +1,2926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>KORI KATTA: Coastal Arena</title>
+  <!-- Tailwind CSS for responsive horizontal arcade layout -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Arcade & UI Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Teko:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --obsidian: #0e0a09;
+      --crimson: #c81e1e;
+      --gold: #f59e0b;
+      --laterite: #7c2d12;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, #280d0c 0%, #0e0a09 70%);
+      color: #fef3c7;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .font-arcade {
+      font-family: 'Teko', sans-serif;
+      letter-spacing: 0.04em;
+    }
+
+    /* High-Contrast Coastal Arcade Card */
+    .arcade-card {
+      background: linear-gradient(180deg, rgba(34, 18, 16, 0.96) 0%, rgba(16, 10, 9, 0.98) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(252, 211, 77, 0.14);
+    }
+
+    .gold-glow {
+      text-shadow: 0 0 14px rgba(245, 158, 11, 0.65);
+    }
+
+    /* Tactile Arcade Buttons */
+    .btn-arcade {
+      position: relative;
+      transition: transform 0.08s ease, box-shadow 0.12s ease, filter 0.12s ease;
+      touch-action: manipulation;
+    }
+    .btn-arcade:active:not(:disabled) {
+      transform: translateY(2px) scale(0.97);
+    }
+
+    .btn-gold {
+      background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+      color: #1c0f0a;
+      border: 1px solid #fef3c7;
+      box-shadow: 0 3px 0 #92400e, 0 5px 14px rgba(245, 158, 11, 0.32);
+    }
+    .btn-gold:active:not(:disabled) { box-shadow: 0 1px 0 #92400e; }
+
+    .btn-crimson {
+      background: linear-gradient(180deg, #ef4444 0%, #991b1b 100%);
+      color: #fffbeb;
+      border: 1px solid #fca5a5;
+      box-shadow: 0 3px 0 #450a0a, 0 6px 16px rgba(200, 30, 30, 0.45);
+    }
+    .btn-crimson:active:not(:disabled) { box-shadow: 0 1px 0 #450a0a; }
+
+    .btn-dark {
+      background: linear-gradient(180deg, #2b1817 0%, #170d0c 100%);
+      color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.32);
+      box-shadow: 0 2px 0 #080404;
+    }
+    .btn-dark:active:not(:disabled) { box-shadow: 0 0 0 #080404; }
+
+    /* Translucent Touch Controls on Fullscreen Gameplay Overlay */
+    .hud-pad-btn {
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      backdrop-filter: blur(4px);
+      transition: transform 0.06s ease, filter 0.06s ease, background-color 0.08s ease;
+    }
+    .hud-pad-btn.pressed,
+    .hud-pad-btn:active {
+      transform: scale(0.91);
+      filter: brightness(1.3);
+    }
+
+    /* Special Ready Glow */
+    @keyframes furyPulse {
+      0%, 100% { box-shadow: 0 0 8px #f59e0b, 0 0 18px #ef4444; }
+      50% { box-shadow: 0 0 18px #fde047, 0 0 32px #ef4444; }
+    }
+    .fury-ready {
+      animation: furyPulse 0.85s infinite ease-in-out;
+    }
+
+    @keyframes startFightGlow {
+      0%, 100% { box-shadow: 0 4px 0 #450a0a, 0 0 16px rgba(239, 68, 68, 0.55); }
+      50% { box-shadow: 0 4px 0 #450a0a, 0 0 28px rgba(245, 158, 11, 0.85); }
+    }
+    .fight-cta-glow {
+      animation: startFightGlow 1.5s infinite ease-in-out;
+    }
+
+    /* Slim Horizontal / Internal Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track { background: rgba(14, 10, 9, 0.6); }
+    ::-webkit-scrollbar-thumb { background: #92400e; border-radius: 999px; }
+
+    /* Reflex Drill Target Pop */
+    @keyframes targetPop {
+      0% { transform: translate(-50%, -50%) scale(0.35); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    .drill-target {
+      animation: targetPop 0.12s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== PORTRAIT ROTATE PROMPT OVERLAY ==================== -->
+  <div id="portraitOverlay" class="hidden fixed inset-0 z-[70] bg-[#0e0a09]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+    <div class="arcade-card rounded-2xl p-6 max-w-xs w-full space-y-4 border-amber-400/60">
+      <div class="text-5xl animate-bounce">📱↻</div>
+      <h2 class="font-arcade text-3xl text-amber-300 leading-none gold-glow">
+        ROTATE TO LANDSCAPE
+      </h2>
+      <p class="text-xs text-amber-100/80 leading-relaxed">
+        Rotate your device horizontally for the best Coastal Karnataka arcade experience and full-width Katta controls.
+      </p>
+      <button onclick="UI.dismissPortraitPrompt()" class="btn-arcade btn-gold w-full py-2 rounded-xl font-arcade text-xl leading-none">
+        CONTINUE ANYWAY
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================================================================== -->
+  <!-- VIEW 1: HORIZONTAL HUB / MENU SCREEN (Canvas is completely hidden here)  -->
+  <!-- ======================================================================== -->
+  <div id="hubScreen" class="w-screen h-screen flex flex-col overflow-hidden">
+
+    <!-- COMPACT HORIZONTAL TOP BAR -->
+    <header class="shrink-0 bg-[#140a09]/95 border-b border-amber-500/30 px-3 py-1.5 flex items-center justify-between gap-2">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-2 shrink-0">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-amber-500 flex items-center justify-center border border-amber-200/80 shadow">
+          <span class="text-lg leading-none" aria-hidden="true">🐓</span>
+        </div>
+        <div class="leading-none">
+          <h1 class="font-arcade text-2xl font-bold text-amber-300 gold-glow tracking-wider leading-none">
+            KORI KATTA
+          </h1>
+          <p class="text-[9px] text-red-300/90 uppercase tracking-widest font-semibold -mt-0.5 hidden sm:block">
+            Coastal Karnataka Arena
+          </p>
+        </div>
+      </div>
+
+      <!-- Horizontal Navigation Tabs (Embedded in top bar on wide screens, or tight strip) -->
+      <nav class="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-0.5">
+        <button data-tab="fight" onclick="UI.switchTab('fight')"
+          class="nav-tab btn-arcade px-2.5 sm:px-3.5 py-1.5 rounded-xl font-arcade text-lg sm:text-xl leading-none flex items-center gap-1 shrink-0">
+          <span>⚔️</span><span>FIGHT</span>
+        </button>
+        <button data-tab="roster" onclick="UI.switchTab('roster')"
+          class="nav-tab btn-arcade px-2.5 sm:px-3.5 py-1.5 rounded-xl font-arcade text-lg sm:text-xl leading-none flex items-center gap-1 shrink-0">
+          <span>🐓</span><span>ROSTER</span>
+        </button>
+        <button data-tab="train" onclick="UI.switchTab('train')"
+          class="nav-tab btn-arcade px-2.5 sm:px-3.5 py-1.5 rounded-xl font-arcade text-lg sm:text-xl leading-none flex items-center gap-1 shrink-0">
+          <span>🏋️</span><span>TRAIN</span>
+        </button>
+        <button data-tab="work" onclick="UI.switchTab('work')"
+          class="nav-tab btn-arcade px-2.5 sm:px-3.5 py-1.5 rounded-xl font-arcade text-lg sm:text-xl leading-none flex items-center gap-1 shrink-0">
+          <span>🌴</span><span>WORK</span>
+        </button>
+        <button data-tab="bet" onclick="UI.switchTab('bet')"
+          class="nav-tab btn-arcade px-2.5 sm:px-3.5 py-1.5 rounded-xl font-arcade text-lg sm:text-xl leading-none flex items-center gap-1 shrink-0">
+          <span>🎲</span><span>BET RING</span>
+        </button>
+      </nav>
+
+      <!-- Right Status Pills: Active Rooster, Coins, Free Tokens, Mute, Reset -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <div class="hidden lg:flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-950/70 border border-red-500/40 text-[11px]">
+          <span class="text-amber-400 font-semibold">Active:</span>
+          <span id="hdrActiveBreed" class="font-bold text-amber-100">Nati Kemp</span>
+        </div>
+
+        <!-- Virtual Coins -->
+        <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-950/80 border border-amber-400/50" title="Virtual Coins">
+          <span class="text-amber-400 font-bold text-xs">₹</span>
+          <span id="hdrCoins" class="font-arcade text-xl leading-none text-amber-200 font-bold">250</span>
+        </div>
+
+        <!-- Free Upgrade Tokens -->
+        <div class="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-950/75 border border-emerald-400/45" title="Free Upgrade Tokens">
+          <span class="text-xs">🎟️</span>
+          <span id="hdrTokens" class="font-arcade text-xl leading-none text-emerald-300 font-bold">0</span>
+        </div>
+
+        <!-- Audio Mute Toggle -->
+        <button id="btnMute" onclick="AudioEngine.toggleMute()" title="Toggle Sound"
+          class="btn-arcade btn-dark w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+          🔊
+        </button>
+
+        <!-- Controls Help -->
+        <button onclick="UI.openControlsModal()" title="Controls & Guide"
+          class="btn-arcade btn-dark w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold">
+          ?
+        </button>
+
+        <!-- Reset Save -->
+        <button onclick="UI.openResetModal()" title="Reset Save Data"
+          class="btn-arcade btn-dark w-8 h-8 rounded-lg flex items-center justify-center text-xs">
+          ↺
+        </button>
+      </div>
+    </header>
+
+    <!-- HUB MAIN CONTENT AREA (Fills remaining viewport height horizontally) -->
+    <main class="flex-1 min-h-0 w-full max-w-7xl mx-auto p-2.5 sm:p-3 overflow-hidden">
+
+      <!-- ======================================================== -->
+      <!-- TAB 1: FIGHT (2-Column Horizontal Setup -> Launch Arena) -->
+      <!-- ======================================================== -->
+      <section id="tab-fight" class="h-full grid grid-cols-12 gap-3 min-h-0">
+        <!-- LEFT COLUMN: Mode Toggle, Tiers / 2P Picker, Virtual Wager -->
+        <div class="col-span-7 arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2.5 min-h-0 overflow-y-auto">
+          <!-- Mode Toggle Header -->
+          <div class="flex items-center justify-between gap-2 border-b border-amber-500/20 pb-2">
+            <div class="inline-flex rounded-xl bg-black/55 p-1 border border-amber-500/30">
+              <button id="btnMode1P" onclick="UI.setFightMode('1p')"
+                class="px-3 py-1 rounded-lg text-xs font-bold transition">
+                🏆 1P TOURNAMENT
+              </button>
+              <button id="btnMode2P" onclick="UI.setFightMode('2p')"
+                class="px-3 py-1 rounded-lg text-xs font-bold transition">
+                👥 2P LOCAL OFFLINE
+              </button>
+            </div>
+            <span id="fightRecordBadge" class="text-[11px] text-amber-200/80 bg-black/40 px-2.5 py-1 rounded-lg border border-amber-500/20 font-semibold">
+              0W - 0L
+            </span>
+          </div>
+
+          <!-- 1P TOURNAMENT TIERS + WAGER -->
+          <div id="setup1PBody" class="flex-1 flex flex-col justify-between gap-2.5 min-h-0">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px] font-bold text-amber-300 uppercase tracking-wider">
+                <span>Coastal Karnataka Tournament Tiers</span>
+                <span class="text-amber-200/70">Beat a tier to unlock next</span>
+              </div>
+              <div id="tierGrid" class="grid grid-cols-5 gap-1.5">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+
+            <!-- Optional Virtual Coin Wager -->
+            <div class="bg-black/40 rounded-xl p-2.5 border border-amber-500/20 space-y-1.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-bold text-amber-300 uppercase">Optional Virtual Wager (Win = 1.6x Payout)</span>
+                <span id="wagerPreviewText" class="text-emerald-300 font-bold">Prize: ₹100</span>
+              </div>
+              <div id="fightWagerBtns" class="grid grid-cols-5 gap-1.5">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 2P LOCAL OFFLINE SETUP -->
+          <div id="setup2PBody" class="hidden flex-1 flex flex-col justify-between gap-2.5 min-h-0">
+            <div class="grid grid-cols-2 gap-2.5">
+              <!-- P1 Selector -->
+              <div class="bg-red-950/35 border border-red-500/35 rounded-xl p-2.5 space-y-1.5">
+                <div class="text-[10px] font-bold text-red-300 uppercase">Player 1 (Left • A/D/W + F/G/H/R)</div>
+                <div class="flex items-center justify-between">
+                  <span id="p1PickName" class="font-arcade text-2xl text-amber-200 leading-none">Nati Kemp</span>
+                  <button onclick="UI.cycleLocalBreed(1)" class="btn-arcade btn-dark px-2.5 py-1 rounded-lg text-[11px] font-bold">Switch ↻</button>
+                </div>
+              </div>
+              <!-- P2 Selector -->
+              <div class="bg-blue-950/35 border border-blue-500/35 rounded-xl p-2.5 space-y-1.5">
+                <div class="text-[10px] font-bold text-blue-300 uppercase">Player 2 (Right • ←/→/↑ + J/K/L/U)</div>
+                <div class="flex items-center justify-between">
+                  <span id="p2PickName" class="font-arcade text-2xl text-amber-200 leading-none">Bolla</span>
+                  <button onclick="UI.cycleLocalBreed(2)" class="btn-arcade btn-dark px-2.5 py-1 rounded-lg text-[11px] font-bold">Switch ↻</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-black/40 border border-amber-500/20 rounded-xl p-2.5 flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold text-amber-200">Mobile Split-Screen Touch Pads</p>
+                <p class="text-[10px] text-amber-100/65">Enable P1 (Left half) & P2 (Right half) on-screen touch buttons.</p>
+              </div>
+              <label class="inline-flex items-center cursor-pointer">
+                <input id="chkDualTouch" type="checkbox" checked class="accent-amber-500 w-5 h-5 rounded">
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: VERSUS MATCHUP CARD + BIG GLOWING START FIGHT CTA -->
+        <div class="col-span-5 arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2 min-h-0">
+          <div class="flex items-center justify-between border-b border-amber-500/20 pb-1.5">
+            <span class="font-arcade text-2xl text-amber-300 leading-none">MATCHUP PREVIEW</span>
+            <span id="vsVenueTag" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-red-900/60 border border-red-400/40 text-amber-200">
+              Village Katta
+            </span>
+          </div>
+
+          <!-- Animated Mini-Canvas Rooster Previews -->
+          <div class="grid grid-cols-11 items-center gap-1 flex-1 min-h-0">
+            <!-- Left Fighter -->
+            <div class="col-span-5 flex flex-col items-center bg-red-950/25 border border-red-500/30 rounded-xl p-1.5 h-full justify-between">
+              <span id="vsP1Label" class="text-[10px] font-bold text-red-300 uppercase">YOU</span>
+              <canvas id="vsP1Canvas" width="120" height="92" class="max-w-full h-auto"></canvas>
+              <span id="vsP1Name" class="font-arcade text-xl text-amber-100 leading-none">Nati Kemp</span>
+            </div>
+
+            <div class="col-span-1 text-center font-arcade text-3xl text-amber-400 gold-glow leading-none">VS</div>
+
+            <!-- Right Fighter -->
+            <div class="col-span-5 flex flex-col items-center bg-blue-950/25 border border-blue-500/30 rounded-xl p-1.5 h-full justify-between">
+              <span id="vsP2Label" class="text-[10px] font-bold text-blue-300 uppercase">CHALLENGER</span>
+              <canvas id="vsP2Canvas" width="120" height="92" class="max-w-full h-auto"></canvas>
+              <span id="vsP2Name" class="font-arcade text-xl text-amber-100 leading-none">Nati Kemp</span>
+            </div>
+          </div>
+
+          <!-- Stat Comparison Bars -->
+          <div id="vsStatBars" class="bg-black/40 rounded-xl p-2 border border-amber-500/15 space-y-1 text-[10px]">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- BIG GLOWING START FIGHT BUTTON -->
+          <button onclick="GameEngine.launchFromFightTab()"
+            class="btn-arcade btn-crimson fight-cta-glow w-full py-2.5 rounded-xl font-arcade text-3xl tracking-wider leading-none flex items-center justify-center gap-2">
+            <span>🥁</span><span>START FIGHT</span><span>⚔️</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 2: ROSTER (5 Unlockable Indian Breeds, Horizontal)   -->
+      <!-- ======================================================== -->
+      <section id="tab-roster" class="hidden h-full flex flex-col gap-2.5 min-h-0">
+        <div class="shrink-0 arcade-card rounded-xl px-3 py-2 flex items-center justify-between">
+          <div>
+            <h2 class="font-arcade text-2xl text-amber-300 leading-none">COASTAL FIGHTER ROSTER</h2>
+            <p class="text-[11px] text-amber-100/75">Unlock and select iconic Indian breeds. Each breed carries unique base stats & perks.</p>
+          </div>
+          <span id="rosterCountBadge" class="text-xs font-bold text-amber-200 bg-black/45 px-3 py-1 rounded-lg border border-amber-500/30">
+            1 / 5 Unlocked
+          </span>
+        </div>
+
+        <!-- Horizontal Grid / Scroll Cards -->
+        <div id="rosterGrid" class="flex-1 min-h-0 grid grid-flow-col auto-cols-[minmax(215px,1fr)] gap-2.5 overflow-x-auto pb-1">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 3: TRAIN (2-Column: Stat Upgrades + Reflex Drill)    -->
+      <!-- ======================================================== -->
+      <section id="tab-train" class="hidden h-full grid grid-cols-12 gap-3 min-h-0">
+        <!-- Left: Stat Upgrades -->
+        <div class="col-span-6 arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2 min-h-0 overflow-y-auto">
+          <div class="flex items-center justify-between border-b border-amber-500/20 pb-1.5">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider text-red-300 font-bold">Training Champion</span>
+              <h2 id="trainBreedTitle" class="font-arcade text-2xl text-amber-300 leading-none">Nati Kemp</h2>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-amber-200/70 block">Free Train Tokens</span>
+              <span id="trainTokensText" class="font-arcade text-2xl text-emerald-400 leading-none">0 🎟️</span>
+            </div>
+          </div>
+
+          <div id="trainStatsList" class="flex-1 flex flex-col justify-center gap-2">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Right: 15-Second Katta Reflex Drill Mini-Game -->
+        <div class="col-span-6 arcade-card rounded-2xl p-3 flex flex-col gap-2 min-h-0">
+          <div class="flex items-center justify-between shrink-0">
+            <div>
+              <h2 class="font-arcade text-2xl text-amber-300 leading-none">KATTA REFLEX DRILL</h2>
+              <p class="text-[11px] text-amber-100/70">Tap flashing pads for 15s! Hit 14+ to earn a Free Train Token + bonus ₹.</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="px-2 py-0.5 rounded-lg bg-black/55 border border-amber-500/30 text-center">
+                <div class="text-[9px] text-amber-300/80">TIME</div>
+                <div id="drillTimer" class="font-arcade text-lg leading-none text-amber-200">15.0s</div>
+              </div>
+              <div class="px-2 py-0.5 rounded-lg bg-black/55 border border-amber-500/30 text-center">
+                <div class="text-[9px] text-amber-300/80">COMBO</div>
+                <div id="drillCombo" class="font-arcade text-lg leading-none text-emerald-400">0</div>
+              </div>
+              <div class="px-2 py-0.5 rounded-lg bg-black/55 border border-amber-500/30 text-center">
+                <div class="text-[9px] text-amber-300/80">HITS</div>
+                <div id="drillHits" class="font-arcade text-lg leading-none text-amber-300">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Playfield -->
+          <div id="drillArena" class="relative flex-1 min-h-0 rounded-xl bg-gradient-to-b from-[#2b100e] via-[#1a0b0a] to-[#3a160c] border-2 border-amber-500/40 overflow-hidden flex items-center justify-center">
+            <div class="w-28 h-28 rounded-full border-2 border-dashed border-amber-400/20 pointer-events-none"></div>
+            <div id="drillOverlay" class="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-3 text-center gap-2">
+              <p id="drillResultText" class="text-xs text-amber-100 max-w-xs">
+                Build rapid combos for higher ₹ payouts. Score 14+ hits to win a <b>Free Train Token</b>!
+              </p>
+              <button onclick="TrainingDrill.start()" class="btn-arcade btn-gold px-6 py-2 rounded-xl font-arcade text-2xl leading-none">
+                START 15s DRILL
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 4: WORK (3 Interactive Coastal Village Mini-Jobs)    -->
+      <!-- ======================================================== -->
+      <section id="tab-work" class="hidden h-full flex flex-col gap-2.5 min-h-0">
+        <div class="shrink-0 arcade-card rounded-xl px-3 py-2 flex items-center justify-between">
+          <div>
+            <h2 class="font-arcade text-2xl text-amber-300 leading-none">COASTAL VILLAGE WORK</h2>
+            <p class="text-[11px] text-amber-100/75">Earn virtual ₹ anytime without fighting by pitching in at the coastal farms.</p>
+          </div>
+          <span class="text-[11px] text-emerald-300 font-bold bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-500/30">
+            Instant Virtual ₹ Payouts
+          </span>
+        </div>
+
+        <div class="flex-1 min-h-0 grid grid-cols-3 gap-3">
+          <!-- Job 1: Areca Nut Sorting -->
+          <div class="arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2 min-h-0">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🌰</span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-[10px]">
+                  ₹40 - ₹90
+                </span>
+              </div>
+              <h3 class="font-arcade text-2xl text-amber-200 leading-none mt-1">ARECA NUT SORTING</h3>
+              <p class="text-[11px] text-amber-100/70">Tap the ripe golden-orange nuts inside the tray quickly!</p>
+            </div>
+
+            <!-- Mini Interactive Nut Grid -->
+            <div id="arecaGrid" class="grid grid-cols-3 gap-1.5 flex-1 min-h-0 items-center">
+              <!-- 6 Nut Slots populated by JS -->
+            </div>
+
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-amber-200/80">Basket: <b id="arecaCount" class="text-amber-300">0 / 8</b></span>
+              <span id="arecaBonusTag" class="text-emerald-300 font-bold">Speed Bonus Ready</span>
+            </div>
+          </div>
+
+          <!-- Job 2: Coconut Harvest (Timed Rhythm Tap) -->
+          <div class="arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2 min-h-0">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🥥</span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-[10px]">
+                  ₹60 - ₹120
+                </span>
+              </div>
+              <h3 class="font-arcade text-2xl text-amber-200 leading-none mt-1">COCONUT HARVEST</h3>
+              <p class="text-[11px] text-amber-100/70">Tap when the rhythm bar hits the green sweet-spot 4 times!</p>
+            </div>
+
+            <div class="space-y-2.5 my-auto">
+              <div class="flex justify-between text-xs">
+                <span class="text-amber-200">Coconuts Dropped</span>
+                <span id="cocoCount" class="font-bold text-amber-300">0 / 4</span>
+              </div>
+              <div class="relative w-full h-8 rounded-xl bg-black/75 border border-amber-500/40 overflow-hidden">
+                <div class="absolute top-0 bottom-0 bg-emerald-500/40 border-x-2 border-emerald-300" style="left: 38%; width: 24%;"></div>
+                <div id="cocoNeedle" class="absolute top-0 bottom-0 w-2.5 bg-amber-300 shadow-[0_0_10px_#fcd34d]" style="left: 0%;"></div>
+              </div>
+              <p id="cocoFeedback" class="text-[11px] text-center text-amber-200/75">Hit center for bonus ₹!</p>
+            </div>
+
+            <button onclick="VillageWork.tapCoconut()" class="btn-arcade btn-crimson w-full py-2 rounded-xl font-arcade text-2xl leading-none">
+              STRIKE PALM 🥥
+            </button>
+          </div>
+
+          <!-- Job 3: Paddy Sack Hauling (Rapid Tap Stamina Fill) -->
+          <div class="arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2 min-h-0">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-2xl">🌾</span>
+                <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold text-[10px]">
+                  ₹80 - ₹150
+                </span>
+              </div>
+              <h3 class="font-arcade text-2xl text-amber-200 leading-none mt-1">PADDY SACK HAULING</h3>
+              <p class="text-[11px] text-amber-100/70">Tap rapidly to haul heavy rice sacks before the bar drains!</p>
+            </div>
+
+            <div class="space-y-2.5 my-auto">
+              <div class="flex justify-between text-xs">
+                <span class="text-amber-200">Haul Power</span>
+                <span id="paddyPct" class="font-bold text-emerald-300">0%</span>
+              </div>
+              <div class="w-full h-6 rounded-xl bg-black/75 border border-amber-500/40 overflow-hidden p-0.5">
+                <div id="paddyBar" class="h-full rounded-lg bg-gradient-to-r from-amber-500 via-yellow-400 to-emerald-400 transition-all duration-75" style="width: 0%"></div>
+              </div>
+              <p class="text-[11px] text-center text-amber-200/75">Fill to 100% fast for max ₹150 payout!</p>
+            </div>
+
+            <button onclick="VillageWork.tapPaddy()" class="btn-arcade btn-gold w-full py-2 rounded-xl font-arcade text-2xl leading-none">
+              TAP TO HAUL 🌾
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 5: BET RING (AI vs AI Dynamic Odds -> Fullscreen)    -->
+      <!-- ======================================================== -->
+      <section id="tab-bet" class="hidden h-full flex flex-col gap-2.5 min-h-0">
+        <!-- Top Info Bar -->
+        <div class="shrink-0 arcade-card rounded-xl px-3 py-2 flex items-center justify-between">
+          <div>
+            <h2 class="font-arcade text-2xl text-amber-300 leading-none">AI vs AI VIRTUAL BET RING</h2>
+            <p class="text-[11px] text-amber-100/75">Pick Red or Blue corner, place your virtual ₹ wager, and watch them battle live in fullscreen!</p>
+          </div>
+          <button onclick="BetRing.rollMatchup()" class="btn-arcade btn-dark px-3 py-1.5 rounded-lg text-xs font-bold">
+            🔄 Roll New Matchup
+          </button>
+        </div>
+
+        <!-- Two Randomized AI Roosters Side-by-Side -->
+        <div class="flex-1 min-h-0 grid grid-cols-2 gap-3">
+          <!-- Red Corner -->
+          <div id="betRedCard" onclick="BetRing.selectCorner('red')"
+            class="arcade-card rounded-2xl p-3 cursor-pointer border-2 transition-all flex flex-col justify-between min-h-0">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-0.5 rounded-full bg-red-600/35 border border-red-400 text-red-200 text-[11px] font-bold">RED CORNER</span>
+              <span id="betRedOdds" class="font-arcade text-2xl text-amber-300 leading-none">1.75x ODDS</span>
+            </div>
+            <div class="flex items-center gap-3 my-auto">
+              <canvas id="betRedCanvas" width="120" height="96" class="rounded-xl bg-black/45 border border-red-500/30 shrink-0"></canvas>
+              <div class="flex-1 space-y-1">
+                <h3 id="betRedName" class="font-arcade text-3xl text-amber-100 leading-none">Nati Kemp</h3>
+                <p id="betRedTag" class="text-[11px] text-amber-200/70">Coastal Veteran</p>
+                <div id="betRedStats" class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs pt-1"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blue Corner -->
+          <div id="betBlueCard" onclick="BetRing.selectCorner('blue')"
+            class="arcade-card rounded-2xl p-3 cursor-pointer border-2 transition-all flex flex-col justify-between min-h-0">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-0.5 rounded-full bg-blue-600/35 border border-blue-400 text-blue-200 text-[11px] font-bold">BLUE CORNER</span>
+              <span id="betBlueOdds" class="font-arcade text-2xl text-amber-300 leading-none">2.15x ODDS</span>
+            </div>
+            <div class="flex items-center gap-3 my-auto">
+              <canvas id="betBlueCanvas" width="120" height="96" class="rounded-xl bg-black/45 border border-blue-500/30 shrink-0"></canvas>
+              <div class="flex-1 space-y-1">
+                <h3 id="betBlueName" class="font-arcade text-3xl text-amber-100 leading-none">Bolla</h3>
+                <p id="betBlueTag" class="text-[11px] text-amber-200/70">Agile Sprinter</p>
+                <div id="betBlueStats" class="grid grid-cols-2 gap-x-2 gap-y-0.5 text-xs pt-1"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Wager & BET & WATCH CTA -->
+        <div class="shrink-0 arcade-card rounded-xl p-2.5 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-bold text-amber-300 uppercase">Wager:</span>
+            <div id="betWagerBtns" class="flex items-center gap-1.5">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div id="betPayoutPreview" class="text-xs text-right text-amber-100/85 hidden sm:block">
+              Pick: <b class="text-red-300">RED</b> • Win: <b class="text-emerald-400">₹175</b>
+            </div>
+            <button onclick="BetRing.betAndWatch()" class="btn-arcade btn-gold px-6 py-2 rounded-xl font-arcade text-2xl leading-none shrink-0">
+              🥁 BET &amp; WATCH
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ======================================================================== -->
+  <!-- VIEW 2: FULLSCREEN HORIZONTAL GAMEPLAY ARENA (Only shown during fight!)  -->
+  <!-- ======================================================================== -->
+  <div id="gameplayScreen" class="hidden fixed inset-0 z-40 w-screen h-screen bg-[#0e0a09] overflow-hidden">
+    <!-- 60fps Fullscreen Responsive Landscape Canvas -->
+    <canvas id="gameCanvas" class="block w-full h-full"></canvas>
+
+    <!-- Top-Center Pause / Exit to Hub Button -->
+    <div class="fixed top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2">
+      <button onclick="GameEngine.togglePause()" class="btn-arcade px-3 py-1 rounded-full bg-black/70 border border-amber-400/55 text-amber-200 text-xs font-bold backdrop-blur-sm hover:bg-black/90">
+        ⏸ PAUSE / HUB
+      </button>
+      <span id="liveBetPill" class="hidden px-3 py-1 rounded-full bg-amber-500/25 border border-amber-400 text-amber-200 text-xs font-bold backdrop-blur-sm">
+        LIVE BET
+      </span>
+    </div>
+
+    <!-- 1P TRANSLUCENT HORIZONTAL ARCADE TOUCH OVERLAY -->
+    <div id="touchOverlay1P" class="fixed inset-x-0 bottom-3 px-4 z-40 flex items-end justify-between pointer-events-none">
+      <!-- Bottom-Left: Left, Right, Jump -->
+      <div class="flex items-center gap-2 pointer-events-auto">
+        <button data-ctrl="p1_left" class="hud-pad-btn w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-black/50 border-2 border-amber-400/50 text-amber-200 text-2xl font-bold flex items-center justify-center">
+          ◀
+        </button>
+        <button data-ctrl="p1_jump" class="hud-pad-btn w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-black/50 border-2 border-amber-400/50 text-amber-200 flex flex-col items-center justify-center">
+          <span class="text-lg leading-none">▲</span>
+          <span class="text-[9px] font-bold tracking-wider">JUMP</span>
+        </button>
+        <button data-ctrl="p1_right" class="hud-pad-btn w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-black/50 border-2 border-amber-400/50 text-amber-200 text-2xl font-bold flex items-center justify-center">
+          ▶
+        </button>
+      </div>
+
+      <!-- Center Desktop Keyboard Hint -->
+      <div class="hidden lg:flex items-center gap-2.5 px-3 py-1 rounded-full bg-black/55 border border-amber-500/25 text-[10px] text-amber-200/80 backdrop-blur-sm">
+        <span><b class="text-amber-300">A/D</b> Move</span>
+        <span><b class="text-amber-300">W</b> Jump</span>
+        <span><b class="text-amber-300">F</b> Peck</span>
+        <span><b class="text-amber-300">G</b> Spur</span>
+        <span><b class="text-amber-300">H</b> Block</span>
+        <span><b class="text-amber-300">R</b> Special</span>
+      </div>
+
+      <!-- Bottom-Right: Peck, Spur, Block, Special -->
+      <div class="flex items-center gap-2 pointer-events-auto">
+        <button data-ctrl="p1_guard" class="hud-pad-btn w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-900/60 border-2 border-sky-400/55 text-sky-200 flex flex-col items-center justify-center">
+          <span class="font-arcade text-xl leading-none">BLOCK</span>
+          <span class="text-[9px] font-bold opacity-80">GUARD</span>
+        </button>
+        <button data-ctrl="p1_peck" class="hud-pad-btn w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-amber-600/65 border-2 border-amber-200/80 text-white flex flex-col items-center justify-center">
+          <span class="font-arcade text-xl leading-none">PECK</span>
+          <span class="text-[9px] font-bold opacity-90">FAST</span>
+        </button>
+        <button data-ctrl="p1_spur" class="hud-pad-btn w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-red-700/75 border-2 border-red-300/80 text-white flex flex-col items-center justify-center">
+          <span class="font-arcade text-xl leading-none">SPUR</span>
+          <span class="text-[9px] font-bold opacity-90">HEAVY</span>
+        </button>
+        <button id="hudP1Special" data-ctrl="p1_special" class="hud-pad-btn w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-b from-amber-400/85 to-red-700/85 border-2 border-yellow-200 text-white flex flex-col items-center justify-center opacity-50">
+          <span class="font-arcade text-xl leading-none">FURY</span>
+          <span class="text-[9px] font-bold">100%</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2P SPLIT-SCREEN TRANSLUCENT TOUCH OVERLAY -->
+    <div id="touchOverlay2P" class="hidden fixed inset-x-0 bottom-2 px-3 z-40 grid grid-cols-2 gap-4 pointer-events-none">
+      <!-- P1 Left Half -->
+      <div class="flex items-end justify-between bg-red-950/35 border border-red-400/35 rounded-2xl p-2 pointer-events-auto backdrop-blur-sm">
+        <div class="flex gap-1.5">
+          <button data-ctrl="p1_left" class="hud-pad-btn w-11 h-11 rounded-xl bg-black/60 border border-red-400/60 text-amber-100 font-bold">◀</button>
+          <button data-ctrl="p1_jump" class="hud-pad-btn w-11 h-11 rounded-xl bg-black/60 border border-red-400/60 text-amber-100 font-bold">▲</button>
+          <button data-ctrl="p1_right" class="hud-pad-btn w-11 h-11 rounded-xl bg-black/60 border border-red-400/60 text-amber-100 font-bold">▶</button>
+        </div>
+        <div class="flex gap-1">
+          <button data-ctrl="p1_peck" class="hud-pad-btn px-2 h-11 rounded-xl bg-amber-600/75 border border-amber-200 text-white font-arcade text-lg">PECK</button>
+          <button data-ctrl="p1_spur" class="hud-pad-btn px-2 h-11 rounded-xl bg-red-700/80 border border-red-300 text-white font-arcade text-lg">SPUR</button>
+          <button data-ctrl="p1_guard" class="hud-pad-btn px-2 h-11 rounded-xl bg-slate-800/75 border border-sky-300 text-sky-100 font-arcade text-base">BLK</button>
+          <button id="hudP1Special2P" data-ctrl="p1_special" class="hud-pad-btn px-2 h-11 rounded-xl bg-amber-500/80 border border-yellow-200 text-white font-arcade text-base opacity-50">FURY</button>
+        </div>
+      </div>
+
+      <!-- P2 Right Half -->
+      <div class="flex items-end justify-between bg-blue-950/35 border border-blue-400/35 rounded-2xl p-2 pointer-events-auto backdrop-blur-sm">
+        <div class="flex gap-1.5">
+          <button data-ctrl="p2_left" class="hud-pad-btn w-11 h-11 rounded-xl bg-black/60 border border-blue-400/60 text-amber-100 font-bold">◀</button>
+          <button data-ctrl="p2_jump" class="hud-pad-btn w-11 h-11 rounded-xl bg-black/60 border border-blue-400/60 text-amber-100 font-bold">▲</button>
+          <button data-ctrl="p2_right" class="hud-pad-btn w-11 h-11 rounded-xl bg-black/60 border border-blue-400/60 text-amber-100 font-bold">▶</button>
+        </div>
+        <div class="flex gap-1">
+          <button data-ctrl="p2_peck" class="hud-pad-btn px-2 h-11 rounded-xl bg-amber-600/75 border border-amber-200 text-white font-arcade text-lg">PECK</button>
+          <button data-ctrl="p2_spur" class="hud-pad-btn px-2 h-11 rounded-xl bg-red-700/80 border border-red-300 text-white font-arcade text-lg">SPUR</button>
+          <button data-ctrl="p2_guard" class="hud-pad-btn px-2 h-11 rounded-xl bg-slate-800/75 border border-sky-300 text-sky-100 font-arcade text-base">BLK</button>
+          <button id="hudP2Special2P" data-ctrl="p2_special" class="hud-pad-btn px-2 h-11 rounded-xl bg-amber-500/80 border border-yellow-200 text-white font-arcade text-base opacity-50">FURY</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAUSE OVERLAY -->
+    <div id="pauseOverlay" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="arcade-card rounded-2xl p-5 max-w-sm w-full text-center space-y-4 border-amber-400/60">
+        <h2 class="font-arcade text-4xl text-amber-300 gold-glow leading-none">MATCH PAUSED</h2>
+        <p class="text-xs text-amber-100/80">Take a breather or return to the Coastal Hub.</p>
+        <div class="flex flex-col gap-2">
+          <button onclick="GameEngine.togglePause()" class="btn-arcade btn-gold w-full py-2 rounded-xl font-arcade text-2xl leading-none">
+            RESUME FIGHT
+          </button>
+          <button onclick="GameEngine.exitToHub()" class="btn-arcade btn-dark w-full py-2 rounded-xl font-arcade text-xl leading-none">
+            EXIT TO HUB
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST-MATCH VICTORY / DEFEAT OVERLAY -->
+    <div id="resultOverlay" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="arcade-card rounded-2xl p-5 max-w-md w-full text-center space-y-3 border-amber-400/70">
+        <p id="resSub" class="text-xs uppercase tracking-[0.22em] text-amber-300 font-bold">MATCH COMPLETE</p>
+        <h2 id="resTitle" class="font-arcade text-5xl text-amber-100 gold-glow leading-none">VICTORY!</h2>
+        <p id="resDetail" class="text-xs sm:text-sm text-amber-100/85"></p>
+        <div id="resActions" class="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <!-- Populated dynamically with REMATCH / NEXT TIER / RETURN TO HUB -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATIONS ==================== -->
+  <div id="toastContainer" class="fixed bottom-3 left-1/2 -translate-x-1/2 z-[80] flex flex-col items-center gap-1.5 pointer-events-none w-[90%] max-w-sm"></div>
+
+  <!-- ==================== MODAL (Controls / Reset) ==================== -->
+  <div id="appModal" class="hidden fixed inset-0 z-[75] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="arcade-card rounded-2xl max-w-md w-full p-4 space-y-3 border-amber-400/55">
+      <div class="flex items-center justify-between border-b border-amber-500/20 pb-2">
+        <h3 id="modalTitle" class="font-arcade text-3xl text-amber-300 leading-none">CONTROLS</h3>
+        <button onclick="UI.closeModal()" class="text-amber-200 hover:text-white text-lg font-bold px-2">✕</button>
+      </div>
+      <div id="modalBody" class="text-xs text-amber-100/85 space-y-2"></div>
+      <div id="modalFooter" class="flex justify-end gap-2 pt-1"></div>
+    </div>
+  </div>
+
+  <!-- ==================== COMPLETE GAME & UI SCRIPT ==================== -->
+  <script>
+    /*************************************************************************
+     * 1. SYNTHESIZED WEB AUDIO ENGINE (Chende/Dhol, Impacts, Crow, Coins)
+     *************************************************************************/
+    const AudioEngine = (() => {
+      let ctx = null;
+      let muted = false;
+
+      function getCtx() {
+        if (muted) return null;
+        if (!ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) ctx = new AC();
+        }
+        if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+        return ctx;
+      }
+
+      // Coastal Karnataka Chende & Dhol intro rhythm
+      function playChendeIntro() {
+        const c = getCtx();
+        if (!c) return;
+        const now = c.currentTime;
+        const beats = [0, 0.14, 0.28, 0.45, 0.56];
+        beats.forEach((off, idx) => {
+          const t = now + off;
+          // Dhol bass
+          const osc = c.createOscillator();
+          const g = c.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(idx === 4 ? 175 : 140, t);
+          osc.frequency.exponentialRampToValueAtTime(48, t + 0.14);
+          g.gain.setValueAtTime(0.32, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+          osc.connect(g); g.connect(c.destination);
+          osc.start(t); osc.stop(t + 0.17);
+
+          // Chende crisp snap
+          const buf = c.createBuffer(1, Math.floor(c.sampleRate * 0.055), c.sampleRate);
+          const d = buf.getChannelData(0);
+          for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (d.length * 0.24));
+          const n = c.createBufferSource();
+          n.buffer = buf;
+          const flt = c.createBiquadFilter();
+          flt.type = 'bandpass';
+          flt.frequency.value = 1950;
+          const ng = c.createGain();
+          ng.gain.setValueAtTime(0.26, t);
+          ng.gain.exponentialRampToValueAtTime(0.005, t + 0.055);
+          n.connect(flt); flt.connect(ng); ng.connect(c.destination);
+          n.start(t);
+        });
+      }
+
+      // Stylized arcade rooster crow synth
+      function playCrow() {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        const g = c.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(520, t);
+        osc.frequency.linearRampToValueAtTime(840, t + 0.12);
+        osc.frequency.linearRampToValueAtTime(660, t + 0.2);
+        osc.frequency.linearRampToValueAtTime(980, t + 0.34);
+        osc.frequency.exponentialRampToValueAtTime(460, t + 0.56);
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.linearRampToValueAtTime(0.11, t + 0.05);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.58);
+        osc.connect(g); g.connect(c.destination);
+        osc.start(t); osc.stop(t + 0.6);
+      }
+
+      function playPeck() {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        const g = c.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(540, t);
+        osc.frequency.exponentialRampToValueAtTime(140, t + 0.065);
+        g.gain.setValueAtTime(0.17, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.075);
+        osc.connect(g); g.connect(c.destination);
+        osc.start(t); osc.stop(t + 0.08);
+      }
+
+      function playHeavyHit() {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        const g = c.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(230, t);
+        osc.frequency.exponentialRampToValueAtTime(42, t + 0.16);
+        g.gain.setValueAtTime(0.26, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        osc.connect(g); g.connect(c.destination);
+        osc.start(t); osc.stop(t + 0.19);
+      }
+
+      function playBlock() {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        const g = c.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(860, t);
+        osc.frequency.exponentialRampToValueAtTime(410, t + 0.09);
+        g.gain.setValueAtTime(0.15, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        osc.connect(g); g.connect(c.destination);
+        osc.start(t); osc.stop(t + 0.11);
+      }
+
+      function playJump() {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        const g = c.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(190, t);
+        osc.frequency.exponentialRampToValueAtTime(470, t + 0.1);
+        g.gain.setValueAtTime(0.11, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+        osc.connect(g); g.connect(c.destination);
+        osc.start(t); osc.stop(t + 0.12);
+      }
+
+      function playSpecial() {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        [330, 440, 660, 920].forEach((f, idx) => {
+          const osc = c.createOscillator();
+          const g = c.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(f, t + idx * 0.045);
+          osc.frequency.exponentialRampToValueAtTime(f * 1.45, t + idx * 0.045 + 0.13);
+          g.gain.setValueAtTime(0.13, t + idx * 0.045);
+          g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.045 + 0.15);
+          osc.connect(g); g.connect(c.destination);
+          osc.start(t + idx * 0.045); osc.stop(t + idx * 0.045 + 0.16);
+        });
+      }
+
+      function playCoin() {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        [1046, 1396].forEach((f, idx) => {
+          const osc = c.createOscillator();
+          const g = c.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, t + idx * 0.065);
+          g.gain.setValueAtTime(0.15, t + idx * 0.065);
+          g.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.065 + 0.16);
+          osc.connect(g); g.connect(c.destination);
+          osc.start(t + idx * 0.065); osc.stop(t + idx * 0.065 + 0.17);
+        });
+      }
+
+      function playCrowdCheer() {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const dur = 0.85;
+        const buf = c.createBuffer(1, Math.floor(c.sampleRate * dur), c.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.sin((i / d.length) * Math.PI) * 0.35;
+        const src = c.createBufferSource();
+        src.buffer = buf;
+        const flt = c.createBiquadFilter();
+        flt.type = 'bandpass';
+        flt.frequency.value = 950;
+        const g = c.createGain();
+        g.gain.value = 0.22;
+        src.connect(flt); flt.connect(g); g.connect(c.destination);
+        src.start(t);
+        playChendeIntro();
+      }
+
+      function toggleMute() {
+        muted = !muted;
+        const btn = document.getElementById('btnMute');
+        if (btn) btn.textContent = muted ? '🔇' : '🔊';
+        UI.toast(muted ? 'Sound Muted' : 'Sound Enabled 🥁');
+      }
+
+      return {
+        playChendeIntro, playCrow, playPeck, playHeavyHit,
+        playBlock, playJump, playSpecial, playCoin, playCrowdCheer, toggleMute
+      };
+    })();
+
+    /*************************************************************************
+     * 2. BREEDS & COASTAL KARNATAKA TOURNAMENT TIERS
+     *************************************************************************/
+    const BREEDS = [
+      {
+        id: 'nati_kemp',
+        name: 'Nati Kemp',
+        perk: 'Balanced Coastal Fighter',
+        cost: 0,
+        base: { atk: 12, spd: 12, sta: 12, def: 12 },
+        critChance: 0.1,
+        specialName: 'KATTA CYCLONE',
+        colors: {
+          body: '#c81e1e', wing: '#7f1d1d', neck: '#ea580c',
+          tail1: '#1c1917', tail2: '#991b1b', comb: '#ef4444',
+          beak: '#f59e0b', legs: '#d97706', speckle: null
+        }
+      },
+      {
+        id: 'bolla',
+        name: 'Bolla',
+        perk: 'White/Gold • High Speed & Agility',
+        cost: 250,
+        base: { atk: 13, spd: 19, sta: 15, def: 11 },
+        critChance: 0.14,
+        specialName: 'GOLDEN SKY DASH',
+        colors: {
+          body: '#f5f5f4', wing: '#e7e5e4', neck: '#fde68a',
+          tail1: '#f59e0b', tail2: '#d6d3d1', comb: '#dc2626',
+          beak: '#f59e0b', legs: '#f59e0b', speckle: '#fbbf24'
+        }
+      },
+      {
+        id: 'kadaknath',
+        name: 'Kari Kadaknath',
+        perk: 'Jet Black • High Stamina & Crit',
+        cost: 500,
+        base: { atk: 16, spd: 15, sta: 20, def: 12 },
+        critChance: 0.28,
+        specialName: 'OBSIDIAN TEMPEST',
+        colors: {
+          body: '#18181b', wing: '#27272a', neck: '#312e81',
+          tail1: '#09090b', tail2: '#4c1d95', comb: '#581c87',
+          beak: '#71717a', legs: '#3f3f46', speckle: '#6366f1'
+        }
+      },
+      {
+        id: 'giri_spotted',
+        name: 'Giri Spotted',
+        perk: 'Speckled Red/White • Heavy Defense & HP',
+        cost: 800,
+        base: { atk: 15, spd: 13, sta: 16, def: 22 },
+        critChance: 0.12,
+        specialName: 'LATERITE SLAM',
+        colors: {
+          body: '#b91c1c', wing: '#7f1d1d', neck: '#fef3c7',
+          tail1: '#450a0a', tail2: '#f5f5f4', comb: '#ef4444',
+          beak: '#fbbf24', legs: '#d97706', speckle: '#ffffff'
+        }
+      },
+      {
+        id: 'royal_aseel',
+        name: 'Royal Aseel',
+        perk: 'Crimson/Gold • Elite Attack & Power',
+        cost: 1400,
+        base: { atk: 24, spd: 19, sta: 20, def: 20 },
+        critChance: 0.22,
+        specialName: 'ROYAL KATTA FURY',
+        colors: {
+          body: '#991b1b', wing: '#d97706', neck: '#f59e0b',
+          tail1: '#14532d', tail2: '#facc15', comb: '#ef4444',
+          beak: '#fde047', legs: '#eab308', speckle: '#fde047'
+        }
+      }
+    ];
+
+    const TOURNAMENT_TIERS = [
+      { id: 0, name: 'Village Katta', prize: 100, aiLevel: 1, oppBreed: 'nati_kemp', oppBonus: 0 },
+      { id: 1, name: 'Udupi Kambala Fair', prize: 200, aiLevel: 2, oppBreed: 'bolla', oppBonus: 2 },
+      { id: 2, name: 'Karkala Fest', prize: 350, aiLevel: 3, oppBreed: 'kadaknath', oppBonus: 4 },
+      { id: 3, name: 'Puttur Ring', prize: 550, aiLevel: 4, oppBreed: 'giri_spotted', oppBonus: 6 },
+      { id: 4, name: 'Mangalore Grand', prize: 1000, aiLevel: 5, oppBreed: 'royal_aseel', oppBonus: 9 }
+    ];
+
+    /*************************************************************************
+     * 3. PERSISTENT STATE (localStorage)
+     *************************************************************************/
+    const STORAGE_KEY = 'kori_katta_landscape_v2';
+
+    const DefaultState = () => ({
+      coins: 250,
+      unlockedBreeds: ['nati_kemp'],
+      activeBreedId: 'nati_kemp',
+      upgrades: { nati_kemp: { atk: 0, spd: 0, sta: 0, def: 0 } },
+      highestTierUnlocked: 0,
+      selectedTier: 0,
+      wins: 0,
+      losses: 0,
+      freeTokens: 0
+    });
+
+    let State = DefaultState();
+
+    const SaveManager = {
+      load() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            State = { ...DefaultState(), ...JSON.parse(raw) };
+            if (!State.upgrades) State.upgrades = {};
+            if (!State.upgrades[State.activeBreedId]) {
+              State.upgrades[State.activeBreedId] = { atk: 0, spd: 0, sta: 0, def: 0 };
+            }
+          }
+        } catch (e) {
+          State = DefaultState();
+        }
+      },
+      save() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(State)); } catch (e) {}
+      },
+      reset() {
+        State = DefaultState();
+        this.save();
+      }
+    };
+
+    function getBreedById(id) {
+      return BREEDS.find(b => b.id === id) || BREEDS[0];
+    }
+
+    function getBreedUpgrades(breedId) {
+      if (!State.upgrades[breedId]) State.upgrades[breedId] = { atk: 0, spd: 0, sta: 0, def: 0 };
+      return State.upgrades[breedId];
+    }
+
+    function getEffectiveStats(breedId, bonus = 0, useUpgrades = true) {
+      const b = getBreedById(breedId);
+      const u = useUpgrades ? getBreedUpgrades(breedId) : { atk: 0, spd: 0, sta: 0, def: 0 };
+      return {
+        atk: b.base.atk + u.atk * 2 + bonus,
+        spd: b.base.spd + u.spd * 1.5 + bonus * 0.7,
+        sta: b.base.sta + u.sta * 2 + bonus,
+        def: b.base.def + u.def * 2 + bonus
+      };
+    }
+
+    /*************************************************************************
+     * 4. PROCEDURAL VECTOR ROOSTER RENDERER
+     *************************************************************************/
+    function drawProceduralRooster(ctx, x, y, facing, breed, animState, animTime, scale = 1, flash = 0, isSpecial = false) {
+      const c = breed.colors;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(facing * scale, scale);
+
+      if (isSpecial) {
+        const pulse = 1 + Math.sin(animTime * 24) * 0.14;
+        const grad = ctx.createRadialGradient(0, -42, 8, 0, -42, 70 * pulse);
+        grad.addColorStop(0, 'rgba(253, 224, 71, 0.58)');
+        grad.addColorStop(0.6, 'rgba(200, 30, 30, 0.35)');
+        grad.addColorStop(1, 'rgba(200, 30, 30, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, -42, 70 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      let bobY = Math.sin(animTime * 7) * 2.5;
+      let bodyTilt = 0;
+      let wingAngle = Math.sin(animTime * 7) * 0.12;
+      let legCycle = 0;
+      let headExtend = 0;
+      const isKO = animState === 'ko';
+
+      if (animState === 'run') {
+        bobY = Math.abs(Math.sin(animTime * 18)) * -6;
+        bodyTilt = 0.16;
+        legCycle = Math.sin(animTime * 18) * 14;
+        wingAngle = Math.sin(animTime * 18) * 0.36;
+      } else if (animState === 'jump') {
+        bobY = -4; bodyTilt = -0.14;
+        wingAngle = -0.75 + Math.sin(animTime * 24) * 0.42;
+      } else if (animState === 'peck') {
+        bodyTilt = 0.4; headExtend = 18; wingAngle = -0.45;
+      } else if (animState === 'spur' || animState === 'special') {
+        bodyTilt = -0.32;
+        wingAngle = -0.95 + Math.sin(animTime * 34) * 0.45;
+        legCycle = 18;
+      } else if (animState === 'guard') {
+        bodyTilt = -0.12; bobY = 6; wingAngle = 0.48;
+      } else if (animState === 'hurt') {
+        bodyTilt = -0.36; wingAngle = -0.6;
+      } else if (isKO) {
+        ctx.translate(0, -10);
+        ctx.rotate(-Math.PI / 2.2);
+        bobY = 0;
+      }
+
+      // Shadow
+      if (!isKO) {
+        ctx.fillStyle = 'rgba(0,0,0,0.38)';
+        ctx.beginPath();
+        ctx.ellipse(0, 2, 30, 7.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Legs & Golden Spurs
+      ctx.strokeStyle = c.legs;
+      ctx.lineWidth = 4.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      const drawLeg = (ox, swing) => {
+        ctx.beginPath();
+        ctx.moveTo(ox, -24 + bobY);
+        const kx = ox - 4 + swing * 0.4;
+        const ky = -12 + bobY * 0.5;
+        const fx = ox + swing;
+        const fy = (animState === 'spur' || animState === 'special') ? -14 : 0;
+        ctx.lineTo(kx, ky); ctx.lineTo(fx, fy);
+        ctx.moveTo(fx, fy); ctx.lineTo(fx + 10, fy);
+        ctx.moveTo(fx, fy); ctx.lineTo(fx - 6, fy);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#fde047';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(fx - 2, fy - 4);
+        ctx.lineTo(fx + 7, fy - 9);
+        ctx.stroke();
+        ctx.strokeStyle = c.legs;
+        ctx.lineWidth = 4.5;
+      };
+      drawLeg(-6, -legCycle);
+      drawLeg(6, legCycle);
+
+      ctx.translate(0, -34 + bobY);
+      ctx.rotate(bodyTilt);
+
+      // Tail Plumes
+      const tailSway = Math.sin(animTime * 8) * 4;
+      const drawTail = (col, ang, len) => {
+        ctx.save();
+        ctx.translate(-22, -4);
+        ctx.rotate(ang + tailSway * 0.015);
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(-len * 0.65, -len * 0.85, -len, -len * 0.15);
+        ctx.quadraticCurveTo(-len * 0.55, -len * 0.28, 0, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      };
+      drawTail(c.tail1, -0.35, 43);
+      drawTail(c.tail2, -0.05, 39);
+      drawTail(c.tail1, 0.25, 33);
+
+      // Body
+      ctx.fillStyle = flash > 0 ? '#ffffff' : c.body;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 26, 18, -0.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Speckles
+      if (c.speckle && flash <= 0) {
+        ctx.fillStyle = c.speckle;
+        [[-8, -4], [4, -6], [-2, 5], [11, 2], [-13, 3]].forEach(([sx, sy]) => {
+          ctx.beginPath(); ctx.arc(sx, sy, 2.3, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+
+      // Neck Hackles
+      ctx.fillStyle = flash > 0 ? '#ffffff' : c.neck;
+      ctx.beginPath();
+      ctx.moveTo(8, -10);
+      ctx.quadraticCurveTo(22 + headExtend * 0.4, -22, 24 + headExtend * 0.6, -28);
+      ctx.lineTo(14 + headExtend * 0.4, -30);
+      ctx.quadraticCurveTo(4, -18, 2, -2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Wing
+      ctx.save();
+      ctx.translate(-2, -2);
+      ctx.rotate(wingAngle);
+      ctx.fillStyle = flash > 0 ? '#fef08a' : c.wing;
+      ctx.beginPath();
+      ctx.ellipse(0, 3, 18, 10, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      // Head, Comb, Wattle, Beak
+      const hx = 22 + headExtend, hy = -28;
+      ctx.fillStyle = flash > 0 ? '#ffffff' : c.neck;
+      ctx.beginPath(); ctx.arc(hx, hy, 10.5, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = c.comb;
+      ctx.beginPath();
+      ctx.moveTo(hx - 8, hy - 7); ctx.lineTo(hx - 6, hy - 17);
+      ctx.lineTo(hx - 1, hy - 12); ctx.lineTo(hx + 2, hy - 19);
+      ctx.lineTo(hx + 6, hy - 12); ctx.lineTo(hx + 10, hy - 15);
+      ctx.lineTo(hx + 8, hy - 6); ctx.closePath(); ctx.fill();
+
+      ctx.beginPath(); ctx.ellipse(hx + 5, hy + 9, 4, 6, 0.2, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = c.beak;
+      ctx.beginPath();
+      ctx.moveTo(hx + 8, hy - 3); ctx.lineTo(hx + 21, hy + 1); ctx.lineTo(hx + 8, hy + 5);
+      ctx.closePath(); ctx.fill();
+
+      // Eye
+      if (isKO) {
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(hx + 1, hy - 5); ctx.lineTo(hx + 6, hy);
+        ctx.moveTo(hx + 6, hy - 5); ctx.lineTo(hx + 1, hy);
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath(); ctx.arc(hx + 4, hy - 2.5, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#09090b';
+        ctx.beginPath(); ctx.arc(hx + 5, hy - 2.5, 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#1c1917'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(hx, hy - 6.5); ctx.lineTo(hx + 7, hy - 4); ctx.stroke();
+      }
+
+      if (animState === 'guard') {
+        ctx.strokeStyle = 'rgba(147, 197, 253, 0.85)';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(16, -6, 30, -Math.PI * 0.42, Math.PI * 0.42);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    /*************************************************************************
+     * 5. PARTICLE SYSTEM (Feathers, Hit Sparks, Laterite Dust, Floating Text)
+     *************************************************************************/
+    const Particles = {
+      items: [],
+      texts: [],
+      clear() { this.items = []; this.texts = []; },
+
+      spawnFeathers(x, y, breed, count = 8) {
+        const pal = [breed.colors.body, breed.colors.neck, breed.colors.tail1, '#fbbf24'];
+        for (let i = 0; i < count; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const spd = 90 + Math.random() * 210;
+          this.items.push({
+            type: 'feather', x, y,
+            vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 90,
+            rot: Math.random() * 6.28, vrot: (Math.random() - 0.5) * 10,
+            size: 5 + Math.random() * 5,
+            color: pal[Math.floor(Math.random() * pal.length)],
+            life: 0.75 + Math.random() * 0.5, maxLife: 1.25
+          });
+        }
+      },
+
+      spawnSparks(x, y, color = '#fde047', count = 10) {
+        for (let i = 0; i < count; i++) {
+          const a = Math.random() * Math.PI * 2;
+          const spd = 140 + Math.random() * 250;
+          this.items.push({
+            type: 'spark', x, y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+            size: 3 + Math.random() * 3, color, life: 0.24 + Math.random() * 0.18, maxLife: 0.42
+          });
+        }
+      },
+
+      spawnDust(x, y, count = 5) {
+        for (let i = 0; i < count; i++) {
+          this.items.push({
+            type: 'dust', x: x + (Math.random() - 0.5) * 26, y: y - Math.random() * 5,
+            vx: (Math.random() - 0.5) * 65, vy: -20 - Math.random() * 45,
+            size: 7 + Math.random() * 8, color: 'rgba(180, 83, 9, 0.55)',
+            life: 0.4 + Math.random() * 0.25, maxLife: 0.65
+          });
+        }
+      },
+
+      spawnText(x, y, text, color = '#fde047', size = 28) {
+        this.texts.push({ x, y, text, color, size, vy: -58, life: 0.85, maxLife: 0.85 });
+      },
+
+      update(dt) {
+        for (let i = this.items.length - 1; i >= 0; i--) {
+          const p = this.items[i];
+          p.life -= dt;
+          if (p.life <= 0) { this.items.splice(i, 1); continue; }
+          p.x += p.vx * dt; p.y += p.vy * dt;
+          if (p.type === 'feather') { p.vy += 240 * dt; p.vx *= 0.96; p.rot += p.vrot * dt; }
+          else if (p.type === 'spark') { p.vx *= 0.92; p.vy *= 0.92; }
+          else if (p.type === 'dust') { p.size += 12 * dt; }
+        }
+        for (let i = this.texts.length - 1; i >= 0; i--) {
+          const t = this.texts[i];
+          t.life -= dt; t.y += t.vy * dt;
+          if (t.life <= 0) this.texts.splice(i, 1);
+        }
+      },
+
+      draw(ctx) {
+        for (const p of this.items) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.maxLife));
+          if (p.type === 'feather') {
+            ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.ellipse(0, 0, p.size * 1.5, p.size * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+          } else {
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        }
+        for (const t of this.texts) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0, Math.min(1, t.life / t.maxLife));
+          ctx.font = `700 ${t.size}px Teko, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.lineWidth = 4; ctx.strokeStyle = '#1c0a0a';
+          ctx.strokeText(t.text, t.x, t.y);
+          ctx.fillStyle = t.color;
+          ctx.fillText(t.text, t.x, t.y);
+          ctx.restore();
+        }
+      }
+    };
+
+    /*************************************************************************
+     * 6. COASTAL KARNATAKA ARENA SCENERY (Laterite, Bamboo Fence, Palms, Diyas)
+     *************************************************************************/
+    const ArenaRenderer = {
+      draw(ctx, W, H, time, venueName) {
+        // 1. Coastal Sunset Sky
+        const sky = ctx.createLinearGradient(0, 0, 0, H * 0.7);
+        sky.addColorStop(0, '#190814');
+        sky.addColorStop(0.4, '#7f1d1d');
+        sky.addColorStop(0.75, '#ea580c');
+        sky.addColorStop(1, '#fbbf24');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H);
+
+        // 2. Setting Sun
+        const sun = ctx.createRadialGradient(W * 0.5, H * 0.52, 10, W * 0.5, H * 0.52, 140);
+        sun.addColorStop(0, 'rgba(254, 240, 138, 0.95)');
+        sun.addColorStop(0.45, 'rgba(251, 146, 60, 0.45)');
+        sun.addColorStop(1, 'rgba(234, 88, 12, 0)');
+        ctx.fillStyle = sun;
+        ctx.beginPath(); ctx.arc(W * 0.5, H * 0.52, 140, 0, Math.PI * 2); ctx.fill();
+
+        // 3. Western Ghats Hills
+        ctx.fillStyle = '#380e12';
+        ctx.beginPath();
+        ctx.moveTo(0, H * 0.66);
+        ctx.quadraticCurveTo(W * 0.22, H * 0.46, W * 0.45, H * 0.63);
+        ctx.quadraticCurveTo(W * 0.72, H * 0.44, W, H * 0.64);
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
+        ctx.fill();
+
+        // 4. Swaying Coconut Palms
+        const palms = [
+          { x: 90, h: 215, lean: -18 }, { x: 215, h: 175, lean: 14 },
+          { x: W - 205, h: 185, lean: -16 }, { x: W - 85, h: 220, lean: 20 }
+        ];
+        palms.forEach((p, idx) => {
+          const sway = Math.sin(time * 1.6 + idx * 1.3) * 7;
+          const by = H * 0.69, tx = p.x + p.lean + sway, ty = by - p.h;
+          ctx.strokeStyle = '#20080a'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(p.x, by);
+          ctx.quadraticCurveTo(p.x + p.lean * 0.4, by - p.h * 0.5, tx, ty); ctx.stroke();
+
+          ctx.strokeStyle = '#180608'; ctx.lineWidth = 5;
+          [-2.3, -1.6, -0.8, 0.1, 0.9, 1.8].forEach(a => {
+            ctx.beginPath(); ctx.moveTo(tx, ty);
+            ctx.quadraticCurveTo(tx + Math.cos(a) * 32, ty + Math.sin(a) * 10 - 12, tx + Math.cos(a) * 58, ty + Math.sin(a) * 32 + 16);
+            ctx.stroke();
+          });
+        });
+
+        // 5. Animated Spectator Silhouettes
+        ctx.fillStyle = '#160707';
+        for (let i = 0; i < 28; i++) {
+          const cx = (i / 27) * W;
+          const hop = Math.abs(Math.sin(time * 4.2 + i * 0.85)) * 4.5;
+          ctx.beginPath(); ctx.arc(cx, H * 0.655 - hop, 12, 0, Math.PI * 2); ctx.fill();
+          ctx.fillRect(cx - 13, H * 0.655 - hop, 26, 36);
+        }
+
+        // 6. Traditional Bamboo Katta Fence
+        const groundY = H * 0.70;
+        ctx.strokeStyle = '#92400e';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(0, groundY - 22); ctx.lineTo(W, groundY - 22);
+        ctx.moveTo(0, groundY - 8); ctx.lineTo(W, groundY - 8);
+        ctx.stroke();
+        ctx.fillStyle = '#78350f';
+        for (let bx = 24; bx < W; bx += 54) {
+          ctx.fillRect(bx, groundY - 34, 7, 38);
+          ctx.fillStyle = '#b45309';
+          ctx.fillRect(bx, groundY - 22, 7, 3);
+          ctx.fillStyle = '#78350f';
+        }
+
+        // 7. Rich Red Laterite Dirt Ring
+        const earth = ctx.createLinearGradient(0, groundY, 0, H);
+        earth.addColorStop(0, '#9a3412');
+        earth.addColorStop(0.5, '#7c2d12');
+        earth.addColorStop(1, '#431407');
+        ctx.fillStyle = earth;
+        ctx.fillRect(0, groundY, W, H - groundY);
+
+        // Chalk Ring & Center Line
+        ctx.strokeStyle = 'rgba(254, 243, 199, 0.32)';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(W * 0.5, H * 0.84, W * 0.43, 44, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath(); ctx.moveTo(W * 0.5, groundY + 12); ctx.lineTo(W * 0.5, H - 12); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 8. Glowing Oil Lamps (Diyas)
+        [64, W - 64].forEach((tx, idx) => {
+          const ty = groundY + 8;
+          ctx.fillStyle = '#291008'; ctx.fillRect(tx - 5, ty - 72, 10, 72);
+          ctx.fillStyle = '#d97706';
+          ctx.beginPath(); ctx.arc(tx, ty - 72, 11, 0, Math.PI); ctx.fill();
+          const fl = Math.sin(time * 18 + idx * 3) * 3;
+          const fg = ctx.createRadialGradient(tx, ty - 85, 2, tx, ty - 85, 36 + fl);
+          fg.addColorStop(0, 'rgba(254, 249, 195, 0.95)');
+          fg.addColorStop(0.42, 'rgba(249, 115, 22, 0.55)');
+          fg.addColorStop(1, 'rgba(239, 68, 68, 0)');
+          ctx.fillStyle = fg;
+          ctx.beginPath(); ctx.arc(tx, ty - 85, 36 + fl, 0, Math.PI * 2); ctx.fill();
+        });
+
+        // 9. Festive Mango-Leaf & Marigold Torana Garland
+        ctx.strokeStyle = '#92400e'; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 10);
+        ctx.quadraticCurveTo(W * 0.25, 34, W * 0.5, 16);
+        ctx.quadraticCurveTo(W * 0.75, 34, W, 10);
+        ctx.stroke();
+
+        for (let i = 1; i < 28; i++) {
+          const t = i / 28;
+          const gx = t * W;
+          const gy = 12 + Math.sin(t * Math.PI * 2) * 8 + Math.sin(t * Math.PI) * 6;
+          ctx.fillStyle = '#15803d';
+          ctx.beginPath(); ctx.ellipse(gx, gy + 7, 4, 9, 0, 0, Math.PI * 2); ctx.fill();
+          if (i % 2 === 0) {
+            ctx.fillStyle = i % 4 === 0 ? '#f59e0b' : '#f97316';
+            ctx.beginPath(); ctx.arc(gx, gy + 2, 5, 0, Math.PI * 2); ctx.fill();
+          }
+        }
+
+        // Venue Watermark
+        ctx.fillStyle = 'rgba(254, 243, 199, 0.26)';
+        ctx.font = '700 18px Teko, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(venueName.toUpperCase(), W * 0.5, H - 10);
+      }
+    };
+
+    /*************************************************************************
+     * 7. FIGHTER ENTITY (Combat State Machine + AI Brain)
+     *************************************************************************/
+    const LOGICAL_W = 1000;
+    const LOGICAL_H = 520;
+    const GROUND_Y = 445;
+    const GRAVITY = 1580;
+
+    class Fighter {
+      constructor({ x, facing, breedId, stats, isAI, aiLevel = 2, label }) {
+        this.x = x; this.y = GROUND_Y;
+        this.vx = 0; this.vy = 0;
+        this.facing = facing;
+        this.breed = getBreedById(breedId);
+        this.stats = stats;
+        this.isAI = isAI;
+        this.aiLevel = aiLevel;
+        this.label = label;
+
+        this.maxHp = 110 + Math.round(stats.def * 5.4);
+        this.hp = this.maxHp;
+        this.maxSta = 100 + Math.round(stats.sta * 2.5);
+        this.sta = this.maxSta;
+        this.fury = 0;
+
+        this.state = 'idle';
+        this.stateTimer = 0;
+        this.attackHasHit = false;
+        this.flashTimer = 0;
+        this.combo = 0;
+        this.comboTimer = 0;
+        this.animTime = Math.random() * 5;
+        this.aiThinkTimer = 0.22;
+        this.aiIntent = 'idle';
+      }
+
+      get grounded() { return this.y >= GROUND_Y - 0.5; }
+      get moveSpeed() { return 225 + this.stats.spd * 7.5; }
+
+      triggerPeck() {
+        if (['hurt', 'ko', 'peck', 'spur', 'special'].includes(this.state) || this.sta < 10) return;
+        this.sta -= 10;
+        this.state = 'peck';
+        this.stateTimer = 0.23;
+        this.attackHasHit = false;
+        this.vx = this.facing * 155;
+        AudioEngine.playPeck();
+      }
+
+      triggerSpur() {
+        if (['hurt', 'ko', 'spur', 'special'].includes(this.state) || this.sta < 24) return;
+        this.sta -= 24;
+        this.state = 'spur';
+        this.stateTimer = 0.43;
+        this.attackHasHit = false;
+        if (this.grounded) {
+          this.vy = -450;
+          Particles.spawnDust(this.x, GROUND_Y, 6);
+        }
+        this.vx = this.facing * 320;
+        AudioEngine.playJump();
+      }
+
+      triggerSpecial() {
+        if (['hurt', 'ko', 'special'].includes(this.state) || this.fury < 100) return;
+        this.fury = 0;
+        this.state = 'special';
+        this.stateTimer = 0.62;
+        this.attackHasHit = false;
+        this.vy = -330;
+        this.vx = this.facing * 510;
+        AudioEngine.playSpecial();
+        Particles.spawnText(this.x, this.y - 98, this.breed.specialName + '!', '#fde047', 32);
+        Particles.spawnSparks(this.x, this.y - 40, '#f59e0b', 16);
+      }
+
+      update(dt, opp, input) {
+        this.animTime += dt;
+        if (this.flashTimer > 0) this.flashTimer -= dt;
+        if (this.comboTimer > 0) { this.comboTimer -= dt; if (this.comboTimer <= 0) this.combo = 0; }
+
+        if (!['peck', 'spur', 'special', 'ko'].includes(this.state)) {
+          const regen = (this.state === 'guard' ? 10 : 25) + this.stats.sta * 0.45;
+          this.sta = Math.min(this.maxSta, this.sta + regen * dt);
+        }
+
+        if (this.state === 'ko') {
+          this.vx *= 0.88; this.vy += GRAVITY * dt;
+          this.x += this.vx * dt; this.y += this.vy * dt;
+          if (this.y > GROUND_Y) { this.y = GROUND_Y; this.vy = 0; }
+          return;
+        }
+
+        if (['idle', 'run', 'guard'].includes(this.state)) {
+          this.facing = opp.x >= this.x ? 1 : -1;
+        }
+
+        if (this.stateTimer > 0) {
+          this.stateTimer -= dt;
+          if (this.stateTimer <= 0) this.state = this.grounded ? 'idle' : 'jump';
+        }
+
+        const ctrl = this.isAI ? this.computeAI(dt, opp) : input;
+        const canAct = ['idle', 'run', 'jump', 'guard'].includes(this.state);
+
+        if (canAct) {
+          if (ctrl.special && this.fury >= 100) this.triggerSpecial();
+          else if (ctrl.spur) this.triggerSpur();
+          else if (ctrl.peck) this.triggerPeck();
+          else if (ctrl.guard && this.grounded) { this.state = 'guard'; this.vx *= 0.7; }
+          else {
+            let dir = (ctrl.right ? 1 : 0) - (ctrl.left ? 1 : 0);
+            this.vx = dir * this.moveSpeed;
+            if (ctrl.jump && this.grounded) {
+              this.vy = -600; this.state = 'jump';
+              AudioEngine.playJump();
+              Particles.spawnDust(this.x, GROUND_Y, 5);
+            } else if (this.grounded) {
+              this.state = dir !== 0 ? 'run' : 'idle';
+            }
+          }
+        } else {
+          this.vx *= 0.94;
+        }
+
+        this.vy += GRAVITY * dt;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+
+        if (this.y >= GROUND_Y) {
+          if (!this.grounded && this.vy > 200) Particles.spawnDust(this.x, GROUND_Y, 4);
+          this.y = GROUND_Y; this.vy = 0;
+          if (this.state === 'jump') this.state = 'idle';
+        }
+        this.x = Math.max(74, Math.min(LOGICAL_W - 74, this.x));
+
+        // Attack Hitbox
+        if (['peck', 'spur', 'special'].includes(this.state) && !this.attackHasHit) {
+          const reach = this.state === 'peck' ? 80 : (this.state === 'spur' ? 96 : 118);
+          const dx = (opp.x - this.x) * this.facing;
+          const dy = Math.abs(opp.y - this.y);
+          if (dx > -15 && dx < reach && dy < 74) {
+            this.attackHasHit = true;
+            this.landHit(opp);
+          }
+        }
+      }
+
+      landHit(opp) {
+        if (opp.state === 'ko') return;
+        let base = this.state === 'peck' ? 9 : (this.state === 'spur' ? 19 : 35);
+        base += this.stats.atk * (this.state === 'peck' ? 0.55 : (this.state === 'spur' ? 0.95 : 1.45));
+        const isCrit = Math.random() < (this.breed.critChance || 0.1);
+        if (isCrit) base *= 1.3;
+
+        const mit = 1 - Math.min(0.45, opp.stats.def * 0.011);
+        let dmg = Math.max(4, Math.round(base * mit));
+
+        const blocked = opp.state === 'guard' && this.state !== 'special';
+        const hx = (this.x + opp.x) * 0.5, hy = opp.y - 44;
+
+        if (blocked) {
+          dmg = Math.max(2, Math.round(dmg * 0.28));
+          opp.hp = Math.max(0, opp.hp - dmg);
+          opp.vx = this.facing * 155;
+          AudioEngine.playBlock();
+          Particles.spawnSparks(hx, hy, '#93c5fd', 7);
+          Particles.spawnText(opp.x, opp.y - 84, `GUARD -${dmg}`, '#93c5fd', 22);
+        } else {
+          opp.hp = Math.max(0, opp.hp - dmg);
+          opp.flashTimer = 0.14;
+          opp.state = 'hurt';
+          opp.stateTimer = this.state === 'peck' ? 0.2 : 0.34;
+          opp.vx = this.facing * (this.state === 'peck' ? 195 : (this.state === 'spur' ? 320 : 450));
+          if (this.state !== 'peck') opp.vy = -210;
+
+          this.combo += 1; this.comboTimer = 1.6;
+          const furyAdd = this.state === 'peck' ? 15 : (this.state === 'spur' ? 24 : 0);
+          this.fury = Math.min(100, this.fury + furyAdd);
+          opp.fury = Math.min(100, opp.fury + 12);
+
+          if (this.state === 'peck') {
+            AudioEngine.playPeck();
+            GameEngine.triggerJuice(0.035, 5);
+            Particles.spawnFeathers(hx, hy, opp.breed, 5);
+            Particles.spawnSparks(hx, hy, '#fde047', 8);
+          } else {
+            AudioEngine.playHeavyHit();
+            GameEngine.triggerJuice(0.075, this.state === 'special' ? 15 : 9);
+            Particles.spawnFeathers(hx, hy, opp.breed, this.state === 'special' ? 16 : 10);
+            Particles.spawnSparks(hx, hy, '#ef4444', 14);
+          }
+
+          let lbl = `-${dmg}`;
+          if (isCrit) lbl = `CRIT ${lbl}!`;
+          if (this.combo >= 2) lbl += ` (${this.combo}x)`;
+          Particles.spawnText(opp.x, opp.y - 86, lbl, isCrit || this.state === 'special' ? '#fde047' : '#fca5a5', this.state === 'peck' ? 24 : 30);
+        }
+
+        if (opp.hp <= 0) {
+          opp.state = 'ko'; opp.vy = -340; opp.vx = this.facing * 260;
+          Particles.spawnFeathers(opp.x, opp.y - 40, opp.breed, 22);
+          GameEngine.onKO(this, opp);
+        }
+      }
+
+      computeAI(dt, opp) {
+        const out = { left: false, right: false, jump: false, peck: false, spur: false, guard: false, special: false };
+        this.aiThinkTimer -= dt;
+        const dist = Math.abs(opp.x - this.x);
+        const dir = opp.x > this.x ? 1 : -1;
+
+        if (this.aiThinkTimer <= 0) {
+          this.aiThinkTimer = Math.max(0.09, 0.34 - this.aiLevel * 0.045) + Math.random() * 0.1;
+          if (this.fury >= 100 && dist < 220 && Math.random() < 0.78) this.aiIntent = 'special';
+          else if ((opp.state === 'spur' || opp.state === 'peck') && dist < 125 && Math.random() < (0.2 + this.aiLevel * 0.11)) this.aiIntent = 'guard';
+          else if (dist > 118) this.aiIntent = Math.random() < 0.18 ? 'jump_approach' : 'approach';
+          else {
+            const r = Math.random();
+            if (r < 0.36) this.aiIntent = 'peck';
+            else if (r < 0.65 && this.sta >= 24) this.aiIntent = 'spur';
+            else if (r < 0.79) this.aiIntent = 'retreat';
+            else this.aiIntent = 'guard';
+          }
+        }
+
+        if (this.aiIntent === 'approach') { if (dir < 0) out.left = true; else out.right = true; }
+        else if (this.aiIntent === 'jump_approach') { if (dir < 0) out.left = true; else out.right = true; out.jump = true; this.aiIntent = 'approach'; }
+        else if (this.aiIntent === 'retreat') { if (dir < 0) out.right = true; else out.left = true; }
+        else if (this.aiIntent === 'peck') { out.peck = true; this.aiIntent = 'idle'; }
+        else if (this.aiIntent === 'spur') { out.spur = true; this.aiIntent = 'idle'; }
+        else if (this.aiIntent === 'special') { out.special = true; this.aiIntent = 'idle'; }
+        else if (this.aiIntent === 'guard') { out.guard = true; }
+        return out;
+      }
+
+      draw(ctx) {
+        drawProceduralRooster(
+          ctx, this.x, this.y, this.facing, this.breed, this.state,
+          this.animTime, 1.18, this.flashTimer, this.state === 'special' || this.fury >= 100
+        );
+      }
+    }
+
+    /*************************************************************************
+     * 8. FULLSCREEN HORIZONTAL GAMEPLAY ENGINE (Only active during a fight)
+     *************************************************************************/
+    const GameEngine = (() => {
+      let canvas, ctx;
+      let p1 = null, p2 = null;
+      let rafId = null;
+      let active = false;
+      let paused = false;
+      let matchState = 'idle'; // countdown, fighting, over
+      let countdownTimer = 0;
+      let roundTimer = 60;
+      let bgTime = 0;
+      let lastTs = 0;
+      let hitStop = 0;
+      let shakeTime = 0;
+      let shakeMag = 0;
+
+      let matchCfg = {
+        mode: '1p', // 1p, 2p, bet
+        tierId: 0,
+        wager: 0,
+        venueName: 'VILLAGE KATTA',
+        betPick: null,
+        betOdds: 1,
+        redCfg: null,
+        blueCfg: null
+      };
+
+      const keys = {};
+      const touchState = {};
+
+      function init() {
+        canvas = document.getElementById('gameCanvas');
+        ctx = canvas.getContext('2d');
+        window.addEventListener('resize', resizeCanvas);
+
+        window.addEventListener('keydown', e => {
+          if (active && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
+            e.preventDefault();
+          }
+          if (e.code === 'Escape' && active && matchState !== 'over') {
+            togglePause();
+          }
+          keys[e.code] = true;
+        });
+        window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+        // Bind translucent touch buttons
+        document.querySelectorAll('.hud-pad-btn[data-ctrl]').forEach(btn => {
+          const ctrl = btn.getAttribute('data-ctrl');
+          const down = e => { e.preventDefault(); touchState[ctrl] = true; btn.classList.add('pressed'); };
+          const up = e => { e.preventDefault(); touchState[ctrl] = false; btn.classList.remove('pressed'); };
+          btn.addEventListener('pointerdown', down);
+          btn.addEventListener('pointerup', up);
+          btn.addEventListener('pointerleave', up);
+          btn.addEventListener('pointercancel', up);
+        });
+      }
+
+      function resizeCanvas() {
+        if (!canvas || !active) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(480, Math.floor(window.innerWidth * dpr));
+        canvas.height = Math.max(260, Math.floor(window.innerHeight * dpr));
+      }
+
+      function getPlayerInput(num) {
+        if (num === 1) {
+          return {
+            left: !!(keys['KeyA'] || touchState['p1_left']),
+            right: !!(keys['KeyD'] || touchState['p1_right']),
+            jump: !!(keys['KeyW'] || touchState['p1_jump']),
+            peck: !!(keys['KeyF'] || touchState['p1_peck']),
+            spur: !!(keys['KeyG'] || touchState['p1_spur']),
+            guard: !!(keys['KeyH'] || touchState['p1_guard']),
+            special: !!(keys['KeyR'] || touchState['p1_special'])
+          };
+        }
+        return {
+          left: !!(keys['ArrowLeft'] || touchState['p2_left']),
+          right: !!(keys['ArrowRight'] || touchState['p2_right']),
+          jump: !!(keys['ArrowUp'] || touchState['p2_jump']),
+          peck: !!(keys['KeyJ'] || touchState['p2_peck']),
+          spur: !!(keys['KeyK'] || touchState['p2_spur']),
+          guard: !!(keys['KeyL'] || touchState['p2_guard']),
+          special: !!(keys['KeyU'] || touchState['p2_special'])
+        };
+      }
+
+      function enterFullscreenArena(mode) {
+        document.getElementById('hubScreen').classList.add('hidden');
+        document.getElementById('gameplayScreen').classList.remove('hidden');
+        document.getElementById('pauseOverlay').classList.add('hidden');
+        document.getElementById('resultOverlay').classList.add('hidden');
+
+        // Configure Touch Overlays
+        const dualTouch = document.getElementById('chkDualTouch').checked;
+        document.getElementById('touchOverlay1P').classList.toggle('hidden', mode !== '1p');
+        document.getElementById('touchOverlay2P').classList.toggle('hidden', !(mode === '2p' && dualTouch));
+        document.getElementById('liveBetPill').classList.toggle('hidden', mode !== 'bet');
+
+        active = true;
+        paused = false;
+        resizeCanvas();
+        if (rafId) cancelAnimationFrame(rafId);
+        lastTs = performance.now();
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function exitToHub() {
+        active = false;
+        paused = false;
+        matchState = 'idle';
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        document.getElementById('gameplayScreen').classList.add('hidden');
+        document.getElementById('hubScreen').classList.remove('hidden');
+        UI.refreshAll();
+      }
+
+      function launchFromFightTab(overrideTierId = null) {
+        const mode = UI.fightMode;
+        Particles.clear();
+
+        if (mode === '1p') {
+          const tid = overrideTierId !== null ? overrideTierId : State.selectedTier;
+          State.selectedTier = tid;
+          const tier = TOURNAMENT_TIERS[tid] || TOURNAMENT_TIERS[0];
+          const wager = Math.min(UI.fightWager, State.coins);
+          if (wager > 0) {
+            State.coins -= wager;
+            SaveManager.save();
+          }
+
+          matchCfg = { mode: '1p', tierId: tier.id, wager, venueName: tier.name };
+          p1 = new Fighter({
+            x: 240, facing: 1, breedId: State.activeBreedId,
+            stats: getEffectiveStats(State.activeBreedId, 0, true),
+            isAI: false, label: 'YOU'
+          });
+          p2 = new Fighter({
+            x: 760, facing: -1, breedId: tier.oppBreed,
+            stats: getEffectiveStats(tier.oppBreed, tier.oppBonus, false),
+            isAI: true, aiLevel: tier.aiLevel, label: tier.name
+          });
+        } else {
+          matchCfg = { mode: '2p', tierId: 0, wager: 0, venueName: '2P LOCAL KATTA RING' };
+          p1 = new Fighter({
+            x: 240, facing: 1, breedId: UI.localP1Breed,
+            stats: getEffectiveStats(UI.localP1Breed, 0, false),
+            isAI: false, label: 'PLAYER 1'
+          });
+          p2 = new Fighter({
+            x: 760, facing: -1, breedId: UI.localP2Breed,
+            stats: getEffectiveStats(UI.localP2Breed, 0, false),
+            isAI: false, label: 'PLAYER 2'
+          });
+        }
+
+        enterFullscreenArena(mode);
+        beginCountdown();
+      }
+
+      function launchBetMatch(redCfg, blueCfg, pick, wager, odds) {
+        Particles.clear();
+        matchCfg = {
+          mode: 'bet', wager, betPick: pick, betOdds: odds,
+          redCfg, blueCfg, venueName: 'COASTAL BETTING RING • LIVE AI'
+        };
+        document.getElementById('liveBetPill').textContent =
+          `PICK: ${pick.toUpperCase()} • ₹${wager} @ ${odds}x`;
+
+        p1 = new Fighter({
+          x: 240, facing: 1, breedId: redCfg.breedId,
+          stats: redCfg.stats, isAI: true, aiLevel: 4, label: 'RED CORNER'
+        });
+        p2 = new Fighter({
+          x: 760, facing: -1, breedId: blueCfg.breedId,
+          stats: blueCfg.stats, isAI: true, aiLevel: 4, label: 'BLUE CORNER'
+        });
+
+        enterFullscreenArena('bet');
+        beginCountdown();
+      }
+
+      function beginCountdown() {
+        roundTimer = 60;
+        countdownTimer = 2.0;
+        matchState = 'countdown';
+        AudioEngine.playChendeIntro();
+        setTimeout(() => { if (active) AudioEngine.playCrow(); }, 450);
+      }
+
+      function togglePause() {
+        if (!active || matchState === 'over') return;
+        paused = !paused;
+        document.getElementById('pauseOverlay').classList.toggle('hidden', !paused);
+        if (!paused) lastTs = performance.now();
+      }
+
+      function triggerJuice(stopDur, mag) {
+        hitStop = Math.max(hitStop, stopDur);
+        shakeTime = Math.max(shakeTime, 0.16);
+        shakeMag = Math.max(shakeMag, mag);
+      }
+
+      function onKO(winner) {
+        if (matchState === 'over') return;
+        matchState = 'over';
+        AudioEngine.playCrowdCheer();
+        triggerJuice(0.14, 15);
+        setTimeout(() => showPostMatch(winner === p1 ? 1 : 2), 950);
+      }
+
+      function showPostMatch(winnerNum) {
+        let sub = '', title = '', detail = '';
+        const actions = [];
+
+        if (matchCfg.mode === '1p') {
+          const tier = TOURNAMENT_TIERS[matchCfg.tierId];
+          if (winnerNum === 1) {
+            State.wins += 1;
+            const wagerPayout = Math.round(matchCfg.wager * 1.6);
+            const total = tier.prize + wagerPayout;
+            State.coins += total;
+            let unlockedNext = false;
+            if (tier.id >= State.highestTierUnlocked && tier.id < TOURNAMENT_TIERS.length - 1) {
+              State.highestTierUnlocked = tier.id + 1;
+              unlockedNext = true;
+            }
+            SaveManager.save();
+            AudioEngine.playCoin();
+
+            sub = `${tier.name.toUpperCase()} CHAMPION`;
+            title = 'VICTORY! KO!';
+            detail = `Prize: ₹${tier.prize}${wagerPayout > 0 ? ` + Wager Win: ₹${wagerPayout}` : ''} — Total Earned: ₹${total}!`;
+
+            actions.push({ text: 'REMATCH', cls: 'btn-dark', fn: () => launchFromFightTab(tier.id) });
+            if (tier.id < TOURNAMENT_TIERS.length - 1) {
+              actions.push({ text: unlockedNext ? 'NEXT TIER 🔓' : 'NEXT TIER ▶', cls: 'btn-gold', fn: () => launchFromFightTab(tier.id + 1) });
+            }
+          } else {
+            State.losses += 1;
+            SaveManager.save();
+            sub = 'EXHAUSTED • KNOCKOUT';
+            title = 'DEFEATED';
+            detail = matchCfg.wager > 0
+              ? `Lost your ₹${matchCfg.wager} virtual wager. Train stats or visit Village Work to earn more ₹!`
+              : `Tough bout at ${tier.name}! Upgrade your stats in TRAIN and strike back.`;
+            actions.push({ text: 'REMATCH', cls: 'btn-gold', fn: () => launchFromFightTab(tier.id) });
+          }
+          actions.push({ text: 'RETURN TO HUB', cls: 'btn-crimson', fn: () => exitToHub() });
+        } else if (matchCfg.mode === '2p') {
+          sub = 'LOCAL 2P MATCH COMPLETE';
+          title = winnerNum === 1 ? 'PLAYER 1 WINS!' : 'PLAYER 2 WINS!';
+          detail = `${winnerNum === 1 ? p1.breed.name : p2.breed.name} dominates the Coastal Katta!`;
+          actions.push({ text: 'REMATCH', cls: 'btn-gold', fn: () => launchFromFightTab() });
+          actions.push({ text: 'RETURN TO HUB', cls: 'btn-dark', fn: () => exitToHub() });
+        } else if (matchCfg.mode === 'bet') {
+          const winCorner = winnerNum === 1 ? 'red' : 'blue';
+          if (winCorner === matchCfg.betPick) {
+            const payout = Math.round(matchCfg.wager * matchCfg.betOdds);
+            State.coins += payout;
+            SaveManager.save();
+            AudioEngine.playCoin();
+            sub = 'BET RING PAYOUT';
+            title = `YOU WON ₹${payout}!`;
+            detail = `${winCorner.toUpperCase()} CORNER (${winnerNum === 1 ? p1.breed.name : p2.breed.name}) won at ${matchCfg.betOdds}x odds!`;
+          } else {
+            sub = 'BET RING RESULT';
+            title = `${winCorner.toUpperCase()} CORNER WINS`;
+            detail = `Your ₹${matchCfg.wager} virtual wager missed. Roll a fresh matchup in the Bet Ring!`;
+          }
+          actions.push({ text: 'RETURN TO HUB', cls: 'btn-gold', fn: () => { BetRing.rollMatchup(); exitToHub(); } });
+        }
+
+        document.getElementById('resSub').textContent = sub;
+        document.getElementById('resTitle').textContent = title;
+        document.getElementById('resDetail').textContent = detail;
+        const wrap = document.getElementById('resActions');
+        wrap.innerHTML = '';
+        actions.forEach(a => {
+          const b = document.createElement('button');
+          b.className = `btn-arcade ${a.cls} px-5 py-2 rounded-xl font-arcade text-2xl leading-none`;
+          b.textContent = a.text;
+          b.onclick = a.fn;
+          wrap.appendChild(b);
+        });
+        document.getElementById('resultOverlay').classList.remove('hidden');
+      }
+
+      function drawHUD() {
+        if (!p1 || !p2) return;
+        const pad = 28, barW = 360, barH = 22, topY = 48;
+
+        const drawSide = (f, isLeft) => {
+          const x = isLeft ? pad : LOGICAL_W - pad - barW;
+          const hpR = Math.max(0, f.hp / f.maxHp);
+          const staR = Math.max(0, f.sta / f.maxSta);
+          const furyR = Math.max(0, f.fury / 100);
+
+          ctx.font = '700 22px Teko, sans-serif';
+          ctx.textAlign = isLeft ? 'left' : 'right';
+          ctx.fillStyle = '#fef3c7'; ctx.strokeStyle = '#1c0a0a'; ctx.lineWidth = 3;
+          const lbl = `${f.breed.name.toUpperCase()} (${f.label})`;
+          ctx.strokeText(lbl, isLeft ? x : x + barW, topY - 7);
+          ctx.fillText(lbl, isLeft ? x : x + barW, topY - 7);
+
+          // HP
+          ctx.fillStyle = 'rgba(14, 10, 9, 0.85)';
+          ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
+          ctx.fillRect(x, topY, barW, barH);
+          ctx.strokeRect(x, topY, barW, barH);
+
+          const g = ctx.createLinearGradient(x, topY, x, topY + barH);
+          if (hpR > 0.35) {
+            g.addColorStop(0, isLeft ? '#ef4444' : '#3b82f6');
+            g.addColorStop(1, isLeft ? '#991b1b' : '#1d4ed8');
+          } else {
+            g.addColorStop(0, '#facc15'); g.addColorStop(1, '#dc2626');
+          }
+          ctx.fillStyle = g;
+          const fw = barW * hpR;
+          if (isLeft) ctx.fillRect(x + 1, topY + 1, Math.max(0, fw - 2), barH - 2);
+          else ctx.fillRect(x + barW - fw + 1, topY + 1, Math.max(0, fw - 2), barH - 2);
+
+          // Stamina
+          const sy = topY + barH + 5;
+          ctx.fillStyle = 'rgba(0,0,0,0.75)';
+          ctx.fillRect(isLeft ? x : x + barW * 0.28, sy, barW * 0.72, 8);
+          ctx.fillStyle = '#34d399';
+          const sw = barW * 0.72 * staR;
+          if (isLeft) ctx.fillRect(x, sy, sw, 8);
+          else ctx.fillRect(x + barW - sw, sy, sw, 8);
+
+          // Fury
+          const fy = sy + 11;
+          ctx.fillStyle = 'rgba(0,0,0,0.75)';
+          ctx.fillRect(isLeft ? x : x + barW * 0.35, fy, barW * 0.65, 9);
+          ctx.fillStyle = furyR >= 1 ? (Math.sin(bgTime * 20) > 0 ? '#fef08a' : '#f59e0b') : '#f97316';
+          const furyW = barW * 0.65 * furyR;
+          if (isLeft) ctx.fillRect(x, fy, furyW, 9);
+          else ctx.fillRect(x + barW - furyW, fy, furyW, 9);
+
+          if (furyR >= 1) {
+            ctx.font = '700 15px Teko, sans-serif';
+            ctx.fillStyle = '#fef08a';
+            ctx.fillText('FURY READY!', isLeft ? x + barW * 0.65 + 8 : x + barW * 0.35 - 8, fy + 9);
+          }
+        };
+
+        drawSide(p1, true);
+        drawSide(p2, false);
+
+        // Center Round Timer
+        ctx.fillStyle = 'rgba(18, 9, 9, 0.88)';
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.roundRect(LOGICAL_W / 2 - 34, topY - 4, 68, 44, 10); ctx.fill(); ctx.stroke();
+        ctx.font = '700 34px Teko, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = roundTimer <= 10 ? '#ef4444' : '#fde68a';
+        ctx.fillText(Math.ceil(roundTimer).toString(), LOGICAL_W / 2, topY + 28);
+
+        if (matchState === 'countdown') {
+          const sec = Math.ceil(countdownTimer);
+          const txt = sec > 0 ? sec.toString() : 'KATTA!';
+          ctx.font = '700 108px Teko, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.lineWidth = 8; ctx.strokeStyle = '#450a0a';
+          ctx.strokeText(txt, LOGICAL_W / 2, LOGICAL_H / 2 + 16);
+          ctx.fillStyle = '#fde047';
+          ctx.fillText(txt, LOGICAL_W / 2, LOGICAL_H / 2 + 16);
+        }
+      }
+
+      function syncFuryButtons() {
+        const b1 = document.getElementById('hudP1Special');
+        const b1b = document.getElementById('hudP1Special2P');
+        const b2b = document.getElementById('hudP2Special2P');
+        if (p1 && b1) {
+          const r = p1.fury >= 100 && matchState === 'fighting';
+          b1.classList.toggle('fury-ready', r); b1.style.opacity = r ? '1' : '0.45';
+        }
+        if (p1 && b1b) {
+          const r = p1.fury >= 100 && matchState === 'fighting';
+          b1b.classList.toggle('fury-ready', r); b1b.style.opacity = r ? '1' : '0.45';
+        }
+        if (p2 && b2b) {
+          const r = p2.fury >= 100 && matchState === 'fighting';
+          b2b.classList.toggle('fury-ready', r); b2b.style.opacity = r ? '1' : '0.45';
+        }
+      }
+
+      function loop(ts) {
+        if (!active) return;
+        let dt = (ts - lastTs) / 1000;
+        lastTs = ts;
+        dt = Math.min(dt, 0.05);
+
+        if (!paused) {
+          bgTime += dt;
+          if (hitStop > 0) {
+            hitStop -= dt;
+          } else {
+            if (matchState === 'countdown') {
+              countdownTimer -= dt;
+              if (p1) p1.animTime += dt;
+              if (p2) p2.animTime += dt;
+              if (countdownTimer <= 0) {
+                matchState = 'fighting';
+                Particles.spawnText(LOGICAL_W / 2, LOGICAL_H / 2 - 20, 'FIGHT!', '#fde047', 66);
+              }
+            } else if (matchState === 'fighting') {
+              roundTimer = Math.max(0, roundTimer - dt);
+              p1.update(dt, p2, getPlayerInput(1));
+              p2.update(dt, p1, getPlayerInput(2));
+
+              // Prevent overlap
+              const dx = p2.x - p1.x;
+              if (Math.abs(dx) < 42 && Math.abs(p2.y - p1.y) < 40) {
+                const push = (42 - Math.abs(dx)) * 0.5;
+                const d = dx >= 0 ? 1 : -1;
+                p1.x -= d * push; p2.x += d * push;
+              }
+
+              if (roundTimer <= 0 && matchState === 'fighting') {
+                matchState = 'over';
+                showPostMatch((p1.hp / p1.maxHp) >= (p2.hp / p2.maxHp) ? 1 : 2);
+              }
+            } else if (matchState === 'over') {
+              if (p1) p1.animTime += dt;
+              if (p2) p2.animTime += dt;
+            }
+            Particles.update(dt);
+          }
+          if (shakeTime > 0) shakeTime -= dt;
+        }
+
+        // Render scaled to full horizontal canvas
+        const sx = canvas.width / LOGICAL_W;
+        const sy = canvas.height / LOGICAL_H;
+        ctx.save();
+        ctx.scale(sx, sy);
+        if (shakeTime > 0 && !paused) {
+          ctx.translate((Math.random() - 0.5) * shakeMag, (Math.random() - 0.5) * shakeMag);
+        }
+
+        ArenaRenderer.draw(ctx, LOGICAL_W, LOGICAL_H, bgTime, matchCfg.venueName);
+        if (p1) p1.draw(ctx);
+        if (p2) p2.draw(ctx);
+        Particles.draw(ctx);
+        drawHUD();
+        ctx.restore();
+        syncFuryButtons();
+
+        rafId = requestAnimationFrame(loop);
+      }
+
+      return {
+        init, launchFromFightTab, launchBetMatch, togglePause,
+        exitToHub, triggerJuice, onKO
+      };
+    })();
+
+    /*************************************************************************
+     * 9. TRAIN TAB: 15-SECOND KATTA REFLEX DRILL MINI-GAME
+     *************************************************************************/
+    const TrainingDrill = (() => {
+      let running = false, timeLeft = 15.0, hits = 0, combo = 0, maxCombo = 0;
+      let timerId = null, spawnId = null;
+
+      function start() {
+        if (running) return;
+        running = true; timeLeft = 15.0; hits = 0; combo = 0; maxCombo = 0;
+        document.getElementById('drillOverlay').classList.add('hidden');
+        document.getElementById('drillHits').textContent = '0';
+        document.getElementById('drillCombo').textContent = '0';
+        AudioEngine.playChendeIntro();
+        spawnPad();
+
+        timerId = setInterval(() => {
+          timeLeft = Math.max(0, timeLeft - 0.1);
+          document.getElementById('drillTimer').textContent = timeLeft.toFixed(1) + 's';
+          if (timeLeft <= 0) finish();
+        }, 100);
+      }
+
+      function spawnPad() {
+        if (!running) return;
+        const arena = document.getElementById('drillArena');
+        arena.querySelectorAll('.drill-target').forEach(el => el.remove());
+
+        const btn = document.createElement('button');
+        btn.className = 'drill-target absolute w-14 h-14 rounded-full bg-gradient-to-br from-amber-300 via-orange-500 to-red-600 border-2 border-yellow-100 shadow-[0_0_16px_#f59e0b] flex items-center justify-center font-arcade text-2xl text-white cursor-pointer';
+        btn.style.left = (14 + Math.random() * 72) + '%';
+        btn.style.top = (18 + Math.random() * 64) + '%';
+        btn.textContent = '⚡';
+
+        let tapped = false;
+        btn.onpointerdown = e => {
+          e.preventDefault();
+          if (tapped || !running) return;
+          tapped = true;
+          hits++; combo++; maxCombo = Math.max(maxCombo, combo);
+          AudioEngine.playPeck();
+          document.getElementById('drillHits').textContent = hits;
+          document.getElementById('drillCombo').textContent = combo;
+          btn.remove();
+          clearTimeout(spawnId);
+          spawnPad();
+        };
+        arena.appendChild(btn);
+
+        spawnId = setTimeout(() => {
+          if (!tapped && running) {
+            combo = 0;
+            document.getElementById('drillCombo').textContent = '0';
+            btn.remove();
+            spawnPad();
+          }
+        }, 1180);
+      }
+
+      function finish() {
+        running = false;
+        clearInterval(timerId); clearTimeout(spawnId);
+        document.getElementById('drillArena').querySelectorAll('.drill-target').forEach(el => el.remove());
+
+        const coinsEarned = hits * 6 + maxCombo * 4;
+        const wonToken = hits >= 14;
+        State.coins += coinsEarned;
+        if (wonToken) State.freeTokens += 1;
+        SaveManager.save();
+        AudioEngine.playCoin();
+        UI.refreshAll();
+
+        document.getElementById('drillResultText').innerHTML =
+          `<b>${hits} Hits</b> (Max Combo ${maxCombo}) → Earned <b class="text-amber-300">₹${coinsEarned}</b>${wonToken ? ' + <b class="text-emerald-400">1 FREE TRAIN TOKEN! 🎟️</b>' : ' (Hit 14+ for a Free Token)'}`;
+        document.getElementById('drillOverlay').classList.remove('hidden');
+      }
+
+      return { start };
+    })();
+
+    /*************************************************************************
+     * 10. WORK TAB: 3 INTERACTIVE COASTAL VILLAGE MINI-JOBS
+     *************************************************************************/
+    const VillageWork = (() => {
+      // Job 1: Areca Nut Sorting (Click ripe nuts quickly -> ₹40-₹90)
+      let arecaHits = 0, arecaStartTime = 0, ripeIdx = 0;
+
+      function initArecaGrid() {
+        const grid = document.getElementById('arecaGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        for (let i = 0; i < 6; i++) {
+          const btn = document.createElement('button');
+          btn.id = `arecaSlot_${i}`;
+          btn.className = 'btn-arcade h-12 rounded-xl border text-xl flex items-center justify-center transition';
+          btn.onclick = () => tapArecaSlot(i);
+          grid.appendChild(btn);
+        }
+        rollRipeNut();
+      }
+
+      function rollRipeNut() {
+        ripeIdx = Math.floor(Math.random() * 6);
+        for (let i = 0; i < 6; i++) {
+          const btn = document.getElementById(`arecaSlot_${i}`);
+          if (!btn) continue;
+          if (i === ripeIdx) {
+            btn.className = 'btn-arcade h-12 rounded-xl bg-amber-500/35 border-2 border-amber-300 text-2xl flex items-center justify-center shadow-[0_0_10px_rgba(245,158,11,0.45)]';
+            btn.textContent = '🌰';
+          } else {
+            btn.className = 'btn-arcade h-12 rounded-xl bg-black/45 border border-white/10 text-lg opacity-45 flex items-center justify-center';
+            btn.textContent = '🍃';
+          }
+        }
+      }
+
+      function tapArecaSlot(idx) {
+        if (idx !== ripeIdx) {
+          AudioEngine.playBlock();
+          return;
+        }
+        if (arecaHits === 0) arecaStartTime = performance.now();
+        arecaHits++;
+        AudioEngine.playPeck();
+
+        if (arecaHits >= 8) {
+          const elapsed = (performance.now() - arecaStartTime) / 1000;
+          const payout = Math.max(40, Math.min(90, Math.round(95 - elapsed * 6)));
+          arecaHits = 0;
+          State.coins += payout;
+          SaveManager.save();
+          AudioEngine.playCoin();
+          UI.refreshHeader();
+          UI.toast(`Areca Basket Sorted! Earned ₹${payout} 🌰`);
+        }
+        document.getElementById('arecaCount').textContent = `${arecaHits} / 8`;
+        rollRipeNut();
+      }
+
+      // Job 2: Coconut Harvest (Rhythm Tap -> ₹60-₹120)
+      let cocoHits = 0, cocoPerfects = 0, cocoPos = 0, cocoDir = 1;
+
+      function tapCoconut() {
+        if (cocoPos >= 36 && cocoPos <= 62) {
+          const isCenter = cocoPos >= 45 && cocoPos <= 55;
+          cocoHits++;
+          if (isCenter) cocoPerfects++;
+          AudioEngine.playHeavyHit();
+          document.getElementById('cocoFeedback').textContent = isCenter ? 'PERFECT STRIKE! (+Bonus)' : 'Good Hit!';
+          if (cocoHits >= 4) {
+            const payout = Math.min(120, 60 + cocoPerfects * 15);
+            cocoHits = 0; cocoPerfects = 0;
+            State.coins += payout;
+            SaveManager.save();
+            AudioEngine.playCoin();
+            UI.refreshHeader();
+            UI.toast(`Coconut Harvest Complete! Earned ₹${payout} 🥥`);
+          }
+        } else {
+          AudioEngine.playBlock();
+          document.getElementById('cocoFeedback').textContent = 'Missed green zone! Try again.';
+        }
+        document.getElementById('cocoCount').textContent = `${cocoHits} / 4`;
+      }
+
+      // Job 3: Paddy Sack Hauling (Rapid Tap Stamina Fill -> ₹80-₹150)
+      let paddyVal = 0, paddyStart = 0;
+
+      function tapPaddy() {
+        if (paddyVal <= 0) paddyStart = performance.now();
+        paddyVal = Math.min(100, paddyVal + 14);
+        AudioEngine.playPeck();
+        if (paddyVal >= 100) {
+          const sec = (performance.now() - paddyStart) / 1000;
+          const payout = Math.max(80, Math.min(150, Math.round(160 - sec * 14)));
+          paddyVal = 0;
+          State.coins += payout;
+          SaveManager.save();
+          AudioEngine.playCoin();
+          UI.refreshHeader();
+          UI.toast(`Paddy Sacks Hauled! Earned ₹${payout} 🌾`);
+        }
+        updatePaddyUI();
+      }
+
+      function updatePaddyUI() {
+        const bar = document.getElementById('paddyBar');
+        const txt = document.getElementById('paddyPct');
+        if (bar) bar.style.width = paddyVal + '%';
+        if (txt) txt.textContent = Math.round(paddyVal) + '%';
+      }
+
+      // Periodic updates for Coconut Needle & Paddy Drain
+      setInterval(() => {
+        const tabWork = document.getElementById('tab-work');
+        if (!tabWork || tabWork.classList.contains('hidden')) return;
+        cocoPos += cocoDir * 3.5;
+        if (cocoPos >= 94) { cocoPos = 94; cocoDir = -1; }
+        if (cocoPos <= 0) { cocoPos = 0; cocoDir = 1; }
+        const n = document.getElementById('cocoNeedle');
+        if (n) n.style.left = cocoPos + '%';
+
+        if (paddyVal > 0) {
+          paddyVal = Math.max(0, paddyVal - 0.9);
+          updatePaddyUI();
+        }
+      }, 28);
+
+      return { initArecaGrid, tapCoconut, tapPaddy };
+    })();
+
+    /*************************************************************************
+     * 11. BET RING TAB (AI vs AI Dynamic Odds)
+     *************************************************************************/
+    const BetRing = (() => {
+      let redCfg = null, blueCfg = null;
+      let redOdds = 1.8, blueOdds = 2.0;
+      let corner = 'red';
+      let wager = 100;
+
+      function rollMatchup() {
+        const b1 = BREEDS[Math.floor(Math.random() * BREEDS.length)];
+        let b2 = BREEDS[Math.floor(Math.random() * BREEDS.length)];
+        if (b2.id === b1.id) b2 = BREEDS[(BREEDS.indexOf(b1) + 1) % BREEDS.length];
+
+        redCfg = { breedId: b1.id, breed: b1, stats: getEffectiveStats(b1.id, Math.floor(Math.random() * 5), false) };
+        blueCfg = { breedId: b2.id, breed: b2, stats: getEffectiveStats(b2.id, Math.floor(Math.random() * 5), false) };
+
+        const p1 = redCfg.stats.atk + redCfg.stats.spd + redCfg.stats.sta + redCfg.stats.def;
+        const p2 = blueCfg.stats.atk + blueCfg.stats.spd + blueCfg.stats.sta + blueCfg.stats.def;
+        const prob1 = p1 / (p1 + p2);
+        redOdds = Math.max(1.3, Math.min(3.2, +(0.96 / prob1).toFixed(2)));
+        blueOdds = Math.max(1.3, Math.min(3.2, +(0.96 / (1 - prob1)).toFixed(2)));
+        render();
+      }
+
+      function selectCorner(c) { corner = c; render(); }
+
+      function render() {
+        if (!redCfg || !blueCfg) rollMatchup();
+        if (wager > State.coins) wager = State.coins;
+
+        document.getElementById('betRedCard').className =
+          `arcade-card rounded-2xl p-3 cursor-pointer border-2 transition-all flex flex-col justify-between min-h-0 ${corner === 'red' ? 'border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.38)]' : 'border-amber-500/20 opacity-75'}`;
+        document.getElementById('betBlueCard').className =
+          `arcade-card rounded-2xl p-3 cursor-pointer border-2 transition-all flex flex-col justify-between min-h-0 ${corner === 'blue' ? 'border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.38)]' : 'border-amber-500/20 opacity-75'}`;
+
+        document.getElementById('betRedOdds').textContent = `${redOdds}x ODDS`;
+        document.getElementById('betBlueOdds').textContent = `${blueOdds}x ODDS`;
+        document.getElementById('betRedName').textContent = redCfg.breed.name;
+        document.getElementById('betBlueName').textContent = blueCfg.breed.name;
+        document.getElementById('betRedTag').textContent = redCfg.breed.perk;
+        document.getElementById('betBlueTag').textContent = blueCfg.breed.perk;
+
+        const fmt = s => `<div>ATK: <b class="text-amber-300">${Math.round(s.atk)}</b></div><div>SPD: <b class="text-amber-300">${Math.round(s.spd)}</b></div><div>STA: <b class="text-amber-300">${Math.round(s.sta)}</b></div><div>DEF: <b class="text-amber-300">${Math.round(s.def)}</b></div>`;
+        document.getElementById('betRedStats').innerHTML = fmt(redCfg.stats);
+        document.getElementById('betBlueStats').innerHTML = fmt(blueCfg.stats);
+
+        const drawP = (id, b, f) => {
+          const c = document.getElementById(id);
+          if (!c) return;
+          const ctx = c.getContext('2d');
+          ctx.clearRect(0, 0, c.width, c.height);
+          drawProceduralRooster(ctx, 60, 82, f, b, 'idle', 0.4, 0.85, 0, false);
+        };
+        drawP('betRedCanvas', redCfg.breed, 1);
+        drawP('betBlueCanvas', blueCfg.breed, -1);
+
+        const opts = [{ l: '₹50', v: 50 }, { l: '₹100', v: 100 }, { l: '₹250', v: 250 }, { l: '₹500', v: 500 }, { l: 'ALL', v: 'all' }];
+        const grp = document.getElementById('betWagerBtns');
+        grp.innerHTML = '';
+        opts.forEach(o => {
+          const rv = o.v === 'all' ? State.coins : o.v;
+          const dis = State.coins < (o.v === 'all' ? 1 : o.v);
+          const btn = document.createElement('button');
+          btn.disabled = dis;
+          btn.className = `btn-arcade px-2.5 py-1 rounded-lg text-xs font-bold ${wager === rv && rv > 0 ? 'btn-gold' : 'btn-dark'} ${dis ? 'opacity-40' : ''}`;
+          btn.textContent = o.l;
+          btn.onclick = () => { wager = rv; render(); };
+          grp.appendChild(btn);
+        });
+
+        const odds = corner === 'red' ? redOdds : blueOdds;
+        document.getElementById('betPayoutPreview').innerHTML =
+          `Pick: <b class="${corner === 'red' ? 'text-red-300' : 'text-blue-300'}">${corner.toUpperCase()}</b> • Win: <b class="text-emerald-400">₹${Math.round(wager * odds)}</b>`;
+      }
+
+      function betAndWatch() {
+        if (State.coins <= 0 || wager <= 0) {
+          UI.toast('Need virtual ₹ to bet! Visit the WORK tab to earn coins.');
+          return;
+        }
+        const actual = Math.min(wager, State.coins);
+        State.coins -= actual;
+        SaveManager.save();
+        UI.refreshHeader();
+        const odds = corner === 'red' ? redOdds : blueOdds;
+        GameEngine.launchBetMatch(redCfg, blueCfg, corner, actual, odds);
+      }
+
+      return { rollMatchup, selectCorner, render, betAndWatch };
+    })();
+
+    /*************************************************************************
+     * 12. HUB UI CONTROLLER & ANIMATED MATCHUP PREVIEWS
+     *************************************************************************/
+    const UI = {
+      activeTab: 'fight',
+      fightMode: '1p',
+      fightWager: 0,
+      localP1Breed: 'nati_kemp',
+      localP2Breed: 'bolla',
+      portraitDismissed: false,
+
+      checkOrientation() {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const ov = document.getElementById('portraitOverlay');
+        if (ov) ov.classList.toggle('hidden', !isPortrait || this.portraitDismissed);
+      },
+
+      dismissPortraitPrompt() {
+        this.portraitDismissed = true;
+        document.getElementById('portraitOverlay').classList.add('hidden');
+      },
+
+      switchTab(tab) {
+        this.activeTab = tab;
+        document.querySelectorAll('.nav-tab').forEach(b => {
+          const on = b.getAttribute('data-tab') === tab;
+          b.classList.toggle('btn-gold', on);
+          b.classList.toggle('btn-dark', !on);
+        });
+        ['fight', 'roster', 'train', 'work', 'bet'].forEach(t => {
+          document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+        });
+        if (tab === 'fight') this.renderFightTab();
+        if (tab === 'roster') this.renderRoster();
+        if (tab === 'train') this.renderTrain();
+        if (tab === 'bet') BetRing.render();
+      },
+
+      setFightMode(mode) {
+        this.fightMode = mode;
+        this.renderFightTab();
+      },
+
+      cycleLocalBreed(num) {
+        const cur = num === 1 ? this.localP1Breed : this.localP2Breed;
+        const idx = BREEDS.findIndex(b => b.id === cur);
+        const next = BREEDS[(idx + 1) % BREEDS.length].id;
+        if (num === 1) this.localP1Breed = next; else this.localP2Breed = next;
+        this.renderFightTab();
+      },
+
+      renderFightTab() {
+        const is1P = this.fightMode === '1p';
+        document.getElementById('btnMode1P').className = `px-3 py-1 rounded-lg text-xs font-bold transition ${is1P ? 'bg-amber-500 text-black' : 'text-amber-200'}`;
+        document.getElementById('btnMode2P').className = `px-3 py-1 rounded-lg text-xs font-bold transition ${!is1P ? 'bg-amber-500 text-black' : 'text-amber-200'}`;
+        document.getElementById('setup1PBody').classList.toggle('hidden', !is1P);
+        document.getElementById('setup2PBody').classList.toggle('hidden', is1P);
+        document.getElementById('fightRecordBadge').textContent = `${State.wins}W - ${State.losses}L`;
+
+        // Render 5 Tiers
+        const tierGrid = document.getElementById('tierGrid');
+        tierGrid.innerHTML = '';
+        TOURNAMENT_TIERS.forEach(t => {
+          const locked = t.id > State.highestTierUnlocked;
+          const sel = t.id === State.selectedTier;
+          const btn = document.createElement('button');
+          btn.disabled = locked;
+          btn.className = `p-2 rounded-xl border text-left transition flex flex-col justify-between ${
+            sel ? 'bg-red-900/75 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.38)]'
+            : locked ? 'bg-black/45 border-white/10 opacity-40 cursor-not-allowed'
+            : 'bg-black/45 border-amber-500/25 hover:border-amber-400/60'
+          }`;
+          btn.innerHTML = `
+            <div class="flex justify-between text-[9px] font-bold ${sel ? 'text-amber-300' : 'text-amber-200/70'}">
+              <span>T${t.id + 1}</span><span>${locked ? '🔒' : '₹' + t.prize}</span>
+            </div>
+            <div class="font-arcade text-base leading-tight text-amber-100 mt-0.5 line-clamp-2">${t.name}</div>
+          `;
+          btn.onclick = () => {
+            State.selectedTier = t.id; SaveManager.save(); this.renderFightTab();
+          };
+          tierGrid.appendChild(btn);
+        });
+
+        // Virtual Wager Buttons (₹0, ₹50, ₹100, ₹250, ₹500)
+        const tier = TOURNAMENT_TIERS[State.selectedTier] || TOURNAMENT_TIERS[0];
+        if (this.fightWager > State.coins) this.fightWager = 0;
+        const wOpts = [0, 50, 100, 250, 500];
+        const wGrp = document.getElementById('fightWagerBtns');
+        wGrp.innerHTML = '';
+        wOpts.forEach(val => {
+          const dis = val > 0 && State.coins < val;
+          const b = document.createElement('button');
+          b.disabled = dis;
+          b.className = `py-1 rounded-lg text-xs font-bold transition ${this.fightWager === val ? 'bg-amber-500 text-black' : 'bg-black/55 text-amber-200 border border-amber-500/25'} ${dis ? 'opacity-35' : ''}`;
+          b.textContent = `₹${val}`;
+          b.onclick = () => { this.fightWager = val; this.renderFightTab(); };
+          wGrp.appendChild(b);
+        });
+
+        const wWin = Math.round(this.fightWager * 1.6);
+        document.getElementById('wagerPreviewText').textContent =
+          `Prize: ₹${tier.prize}${this.fightWager > 0 ? ` + Bet Win: ₹${wWin}` : ''}`;
+
+        // 2P Breed Names
+        document.getElementById('p1PickName').textContent = getBreedById(this.localP1Breed).name;
+        document.getElementById('p2PickName').textContent = getBreedById(this.localP2Breed).name;
+
+        // Right Column: Versus Matchup Stats
+        const b1Id = is1P ? State.activeBreedId : this.localP1Breed;
+        const b2Id = is1P ? tier.oppBreed : this.localP2Breed;
+        const s1 = getEffectiveStats(b1Id, 0, is1P);
+        const s2 = getEffectiveStats(b2Id, is1P ? tier.oppBonus : 0, false);
+
+        document.getElementById('vsVenueTag').textContent = is1P ? tier.name : '2P Local Ring';
+        document.getElementById('vsP1Label').textContent = is1P ? 'YOU' : 'PLAYER 1';
+        document.getElementById('vsP2Label').textContent = is1P ? 'OPPONENT' : 'PLAYER 2';
+        document.getElementById('vsP1Name').textContent = getBreedById(b1Id).name;
+        document.getElementById('vsP2Name').textContent = getBreedById(b2Id).name;
+
+        const statsRows = [
+          { k: 'atk', lbl: 'ATK' }, { k: 'spd', lbl: 'SPD' },
+          { k: 'sta', lbl: 'STA' }, { k: 'def', lbl: 'DEF' }
+        ];
+        const barWrap = document.getElementById('vsStatBars');
+        barWrap.innerHTML = statsRows.map(r => {
+          const v1 = Math.round(s1[r.k]), v2 = Math.round(s2[r.k]);
+          const p1Pct = Math.min(100, (v1 / 45) * 100);
+          const p2Pct = Math.min(100, (v2 / 45) * 100);
+          return `
+            <div class="grid grid-cols-11 items-center gap-1.5">
+              <div class="col-span-5 flex items-center gap-1.5">
+                <span class="w-5 text-right font-bold text-red-300">${v1}</span>
+                <div class="flex-1 h-2 bg-black/70 rounded-full overflow-hidden flex justify-end">
+                  <div class="h-full bg-red-500 rounded-full" style="width:${p1Pct}%"></div>
+                </div>
+              </div>
+              <div class="col-span-1 text-center font-bold text-amber-300">${r.lbl}</div>
+              <div class="col-span-5 flex items-center gap-1.5">
+                <div class="flex-1 h-2 bg-black/70 rounded-full overflow-hidden">
+                  <div class="h-full bg-blue-500 rounded-full" style="width:${p2Pct}%"></div>
+                </div>
+                <span class="w-5 font-bold text-blue-300">${v2}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      },
+
+      renderRoster() {
+        document.getElementById('rosterCountBadge').textContent = `${State.unlockedBreeds.length} / ${BREEDS.length} Unlocked`;
+        const grid = document.getElementById('rosterGrid');
+        grid.innerHTML = '';
+
+        BREEDS.forEach(breed => {
+          const unlocked = State.unlockedBreeds.includes(breed.id);
+          const active = State.activeBreedId === breed.id;
+          const eff = getEffectiveStats(breed.id, 0, true);
+          const cid = `rosterPrev_${breed.id}`;
+
+          const card = document.createElement('div');
+          card.className = `arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2 border-2 ${active ? 'border-amber-400 shadow-[0_0_16px_rgba(245,158,11,0.3)]' : 'border-amber-500/20'}`;
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-1">
+              <div>
+                <h3 class="font-arcade text-2xl text-amber-200 leading-none">${breed.name}</h3>
+                <p class="text-[10px] text-red-300 font-semibold leading-tight">${breed.perk}</p>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${active ? 'bg-amber-400 text-black' : unlocked ? 'bg-emerald-500/20 text-emerald-300' : 'bg-black/60 text-amber-300'}">
+                ${active ? 'ACTIVE' : unlocked ? 'OWNED' : '₹' + breed.cost}
+              </span>
+            </div>
+            <div class="flex justify-center">
+              <canvas id="${cid}" width="120" height="90" class="rounded-xl bg-black/40 border border-amber-500/20"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-1 text-[11px] bg-black/35 p-2 rounded-xl border border-amber-500/15">
+              <div>ATK: <b class="text-amber-300">${Math.round(eff.atk)}</b></div>
+              <div>SPD: <b class="text-amber-300">${Math.round(eff.spd)}</b></div>
+              <div>STA: <b class="text-amber-300">${Math.round(eff.sta)}</b></div>
+              <div>DEF: <b class="text-amber-300">${Math.round(eff.def)}</b></div>
+            </div>
+          `;
+
+          const btn = document.createElement('button');
+          if (active) {
+            btn.className = 'btn-arcade btn-dark w-full py-1.5 rounded-xl font-arcade text-xl opacity-70 cursor-default';
+            btn.textContent = '✓ ACTIVE FIGHTER';
+          } else if (unlocked) {
+            btn.className = 'btn-arcade btn-gold w-full py-1.5 rounded-xl font-arcade text-xl';
+            btn.textContent = 'SELECT FIGHTER';
+            btn.onclick = () => {
+              State.activeBreedId = breed.id; SaveManager.save();
+              AudioEngine.playPeck(); this.refreshAll();
+              this.toast(`${breed.name} selected!`);
+            };
+          } else {
+            btn.className = 'btn-arcade btn-crimson w-full py-1.5 rounded-xl font-arcade text-xl';
+            btn.textContent = `BUY FOR ₹${breed.cost}`;
+            btn.onclick = () => {
+              if (State.coins < breed.cost) {
+                this.toast(`Need ₹${breed.cost - State.coins} more! Try WORK or FIGHT.`);
+                return;
+              }
+              State.coins -= breed.cost;
+              State.unlockedBreeds.push(breed.id);
+              State.activeBreedId = breed.id;
+              SaveManager.save(); AudioEngine.playCoin(); this.refreshAll();
+              this.toast(`Unlocked ${breed.name}! 🐓`);
+            };
+          }
+          card.appendChild(btn);
+          grid.appendChild(card);
+
+          setTimeout(() => {
+            const c = document.getElementById(cid);
+            if (!c) return;
+            drawProceduralRooster(c.getContext('2d'), 60, 78, 1, breed, 'idle', 0.3, 0.85, 0, false);
+          }, 0);
+        });
+      },
+
+      renderTrain() {
+        const breed = getBreedById(State.activeBreedId);
+        const upg = getBreedUpgrades(breed.id);
+        const eff = getEffectiveStats(breed.id, 0, true);
+
+        document.getElementById('trainBreedTitle').textContent = breed.name;
+        document.getElementById('trainTokensText').textContent = `${State.freeTokens} 🎟️`;
+
+        const meta = [
+          { k: 'atk', l: 'ATTACK', v: Math.round(eff.atk) },
+          { k: 'spd', l: 'SPEED', v: Math.round(eff.spd) },
+          { k: 'sta', l: 'STAMINA', v: Math.round(eff.sta) },
+          { k: 'def', l: 'DEFENSE', v: Math.round(eff.def) }
+        ];
+        const list = document.getElementById('trainStatsList');
+        list.innerHTML = '';
+
+        meta.forEach(m => {
+          const lvl = upg[m.k] || 0;
+          const maxed = lvl >= 10;
+          const cost = 75 + lvl * 65;
+          const useToken = State.freeTokens > 0 && !maxed;
+
+          const row = document.createElement('div');
+          row.className = 'bg-black/40 rounded-xl px-3 py-2 border border-amber-500/20 flex items-center justify-between gap-3';
+          row.innerHTML = `
+            <div class="flex-1 space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="font-bold text-amber-200">${m.l} <span class="text-amber-400">(${m.v})</span></span>
+                <span class="text-amber-300/80">Lv ${lvl}/10</span>
+              </div>
+              <div class="w-full h-2 rounded-full bg-black/75 overflow-hidden border border-amber-500/20">
+                <div class="h-full bg-gradient-to-r from-red-600 via-amber-500 to-yellow-300" style="width:${lvl * 10}%"></div>
+              </div>
+            </div>
+          `;
+          const btn = document.createElement('button');
+          btn.disabled = maxed;
+          btn.className = `btn-arcade shrink-0 px-3 py-1.5 rounded-xl font-arcade text-lg leading-none ${
+            maxed ? 'btn-dark opacity-45' : useToken ? 'bg-emerald-500 text-black font-bold border border-emerald-200' : 'btn-gold'
+          }`;
+          btn.textContent = maxed ? 'MAX' : useToken ? 'FREE 🎟️' : `₹${cost}`;
+          btn.onclick = () => {
+            if (maxed) return;
+            if (State.freeTokens > 0) {
+              State.freeTokens -= 1; upg[m.k] = lvl + 1;
+              SaveManager.save(); AudioEngine.playCoin(); this.refreshAll();
+              this.toast(`Used Free Token! ${m.l} Lv ${lvl + 1}`);
+            } else if (State.coins >= cost) {
+              State.coins -= cost; upg[m.k] = lvl + 1;
+              SaveManager.save(); AudioEngine.playCoin(); this.refreshAll();
+              this.toast(`Upgraded ${m.l} to Lv ${lvl + 1}!`);
+            } else {
+              this.toast(`Need ₹${cost - State.coins} more! Try the Drill or WORK.`);
+            }
+          };
+          row.appendChild(btn);
+          list.appendChild(row);
+        });
+      },
+
+      refreshHeader() {
+        document.getElementById('hdrCoins').textContent = State.coins.toLocaleString('en-IN');
+        document.getElementById('hdrTokens').textContent = State.freeTokens;
+        document.getElementById('hdrActiveBreed').textContent = getBreedById(State.activeBreedId).name;
+      },
+
+      refreshAll() {
+        this.refreshHeader();
+        if (this.activeTab === 'fight') this.renderFightTab();
+        if (this.activeTab === 'roster') this.renderRoster();
+        if (this.activeTab === 'train') this.renderTrain();
+        if (this.activeTab === 'bet') BetRing.render();
+      },
+
+      toast(msg) {
+        const cont = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = 'px-3.5 py-1.5 rounded-xl bg-[#1f1010]/95 border border-amber-400/65 text-amber-100 text-xs font-semibold shadow-2xl transition-all';
+        el.textContent = msg;
+        cont.appendChild(el);
+        setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 220); }, 2100);
+      },
+
+      openControlsModal() {
+        document.getElementById('modalTitle').textContent = 'CONTROLS & GUIDE';
+        document.getElementById('modalBody').innerHTML = `
+          <p class="text-amber-300 font-bold">Desktop Keyboard:</p>
+          <div class="bg-black/45 p-2 rounded-xl border border-amber-500/20 space-y-1">
+            <p><b>P1:</b> A/D Move • W Jump • F Peck • G Spur • H Block • R Special</p>
+            <p><b>P2 (2P Local):</b> ←/→ Move • ↑ Jump • J Peck • K Spur • L Block • U Special</p>
+          </div>
+          <p class="text-amber-300 font-bold">Mobile Touch:</p>
+          <p>Translucent landscape arcade controls appear automatically during fights (bottom-left movement, bottom-right attacks). In 2P Local mode, both players get split-screen touch pads.</p>
+        `;
+        document.getElementById('modalFooter').innerHTML =
+          `<button onclick="UI.closeModal()" class="btn-arcade btn-gold px-5 py-1.5 rounded-xl font-arcade text-xl">GOT IT</button>`;
+        document.getElementById('appModal').classList.remove('hidden');
+      },
+
+      openResetModal() {
+        document.getElementById('modalTitle').textContent = 'RESET SAVE DATA?';
+        document.getElementById('modalBody').innerHTML =
+          `<p>Reset virtual coins to <b>₹250</b>, lock purchased breeds, and clear tournament & stat progress?</p>`;
+        document.getElementById('modalFooter').innerHTML = `
+          <button onclick="UI.closeModal()" class="btn-arcade btn-dark px-4 py-1.5 rounded-xl text-xs font-bold">Cancel</button>
+          <button onclick="SaveManager.reset(); UI.closeModal(); UI.refreshAll(); UI.toast('Progress Reset!');"
+            class="btn-arcade btn-crimson px-4 py-1.5 rounded-xl text-xs font-bold">Yes, Reset</button>
+        `;
+        document.getElementById('appModal').classList.remove('hidden');
+      },
+
+      closeModal() {
+        document.getElementById('appModal').classList.add('hidden');
+      }
+    };
+
+    // Lightweight animation loop for the two Matchup Mini-Canvases on the FIGHT Hub tab
+    function startHubPreviewLoop() {
+      function tick(ts) {
+        if (UI.activeTab === 'fight' && !document.getElementById('hubScreen').classList.contains('hidden')) {
+          const t = ts / 1000;
+          const is1P = UI.fightMode === '1p';
+          const tier = TOURNAMENT_TIERS[State.selectedTier] || TOURNAMENT_TIERS[0];
+          const b1 = getBreedById(is1P ? State.activeBreedId : UI.localP1Breed);
+          const b2 = getBreedById(is1P ? tier.oppBreed : UI.localP2Breed);
+
+          const c1 = document.getElementById('vsP1Canvas');
+          const c2 = document.getElementById('vsP2Canvas');
+          if (c1) {
+            const x1 = c1.getContext('2d');
+            x1.clearRect(0, 0, c1.width, c1.height);
+            drawProceduralRooster(x1, 60, 80, 1, b1, 'idle', t, 0.84, 0, false);
+          }
+          if (c2) {
+            const x2 = c2.getContext('2d');
+            x2.clearRect(0, 0, c2.width, c2.height);
+            drawProceduralRooster(x2, 60, 80, -1, b2, 'idle', t + 1.2, 0.84, 0, false);
+          }
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    /*************************************************************************
+     * 13. BOOTSTRAP ON WINDOW LOAD
+     *************************************************************************/
+    window.onload = function () {
+      SaveManager.load();
+      GameEngine.init();
+      VillageWork.initArecaGrid();
+      BetRing.rollMatchup();
+      UI.checkOrientation();
+      window.addEventListener('resize', () => UI.checkOrientation());
+      UI.switchTab('fight');
+      UI.refreshAll();
+      startHubPreviewLoop();
+    };
+  </script>
+</body>
+</html>
