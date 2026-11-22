@@ -1,0 +1,9 @@
+{
+  "name": "Kori Katta: Coastal Arena",
+  "short_name": "Kori Katta",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0e0806",
+  "theme_color": "#0e0806"
+}
