@@ -6,6 +6,8 @@
   <title>KORI KATTA: Coastal Arena</title>
   <!-- Tailwind CSS for responsive horizontal arcade layout -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- PeerJS 1.5.5 for serverless WebRTC Online 1v1 -->
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
   <!-- Arcade & UI Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -180,6 +182,10 @@
         <button data-tab="fight" onclick="UI.switchTab('fight')"
           class="nav-tab btn-arcade px-2.5 sm:px-3.5 py-1.5 rounded-xl font-arcade text-lg sm:text-xl leading-none flex items-center gap-1 shrink-0">
           <span>⚔️</span><span>FIGHT</span>
+        </button>
+        <button data-tab="online" onclick="UI.switchTab('online')"
+          class="nav-tab btn-arcade px-2.5 sm:px-3.5 py-1.5 rounded-xl font-arcade text-lg sm:text-xl leading-none flex items-center gap-1 shrink-0">
+          <span>🌐</span><span>ONLINE</span>
         </button>
         <button data-tab="roster" onclick="UI.switchTab('roster')"
           class="nav-tab btn-arcade px-2.5 sm:px-3.5 py-1.5 rounded-xl font-arcade text-lg sm:text-xl leading-none flex items-center gap-1 shrink-0">
@@ -359,6 +365,117 @@
             class="btn-arcade btn-crimson fight-cta-glow w-full py-2.5 rounded-xl font-arcade text-3xl tracking-wider leading-none flex items-center justify-center gap-2">
             <span>🥁</span><span>START FIGHT</span><span>⚔️</span>
           </button>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- TAB 1B: ONLINE 1v1 (PeerJS WebRTC Host / Join)           -->
+      <!-- ======================================================== -->
+      <section id="tab-online" class="hidden h-full grid grid-cols-12 gap-3 min-h-0">
+        <!-- LEFT COLUMN: HOST MATCH -->
+        <div class="col-span-6 arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2.5 min-h-0 overflow-y-auto">
+          <div class="flex items-center justify-between border-b border-amber-500/20 pb-2">
+            <div>
+              <h2 class="font-arcade text-2xl text-amber-300 leading-none">HOST ONLINE MATCH</h2>
+              <p class="text-[11px] text-amber-100/70">Create a room code and share it with your friend.</p>
+            </div>
+            <span id="onlineStatusBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-black/55 border border-amber-500/35 text-amber-200">
+              IDLE
+            </span>
+          </div>
+
+          <div class="flex-1 flex flex-col justify-center gap-3">
+            <!-- Room Code Box -->
+            <div class="bg-black/45 rounded-xl p-3 border border-amber-500/25 flex items-center justify-between gap-2">
+              <div>
+                <span class="text-[10px] uppercase tracking-wider text-amber-300/75 font-bold block">Room Code</span>
+                <span id="onlineRoomCode" class="font-arcade text-4xl text-amber-200 tracking-widest leading-none">KATTA- ----</span>
+              </div>
+              <button id="btnCopyCode" onclick="OnlineNet.copyCode()" disabled
+                class="btn-arcade btn-dark px-3.5 py-2 rounded-xl text-xs font-bold opacity-45">
+                📋 COPY CODE
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button id="btnHostRoom" onclick="OnlineNet.hostRoom()"
+                class="btn-arcade btn-gold flex-1 py-2.5 rounded-xl font-arcade text-2xl leading-none">
+                🌐 CREATE ROOM
+              </button>
+              <button id="btnDisconnect" onclick="OnlineNet.disconnect()"
+                class="hidden btn-arcade btn-dark px-4 py-2.5 rounded-xl font-arcade text-xl leading-none text-red-300 border-red-500/40">
+                LEAVE
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-black/35 rounded-xl p-2 border border-amber-500/15 text-[11px] text-amber-100/75 flex items-center justify-between">
+            <span>Win Reward: <b class="text-emerald-400">₹250</b> • Participation: <b class="text-amber-300">₹60</b></span>
+            <span class="text-[10px] text-amber-300/80">Authoritative Host (60fps)</span>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: JOIN MATCH / CONNECTED VERSUS PREVIEW -->
+        <div class="col-span-6 arcade-card rounded-2xl p-3 flex flex-col justify-between gap-2.5 min-h-0 overflow-y-auto">
+          <!-- Join Form (Shown when not connected) -->
+          <div id="onlineJoinPanel" class="h-full flex flex-col justify-between gap-3">
+            <div class="border-b border-amber-500/20 pb-2">
+              <h2 class="font-arcade text-2xl text-amber-300 leading-none">JOIN ONLINE MATCH</h2>
+              <p class="text-[11px] text-amber-100/70">Enter your friend's KATTA room code to enter the ring as Player 2.</p>
+            </div>
+
+            <div class="flex-1 flex flex-col justify-center gap-3">
+              <div class="space-y-1">
+                <label for="joinCodeInput" class="text-[10px] uppercase tracking-wider text-amber-300 font-bold">Enter Room Code</label>
+                <input id="joinCodeInput" type="text" maxlength="10" placeholder="KATTA-1234"
+                  oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9-]/g, '')"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-black/65 border-2 border-amber-500/40 focus:border-amber-300 outline-none font-arcade text-3xl text-amber-100 tracking-widest uppercase placeholder:text-amber-200/25" />
+              </div>
+
+              <button id="btnJoinRoom" onclick="OnlineNet.joinRoom()"
+                class="btn-arcade btn-crimson w-full py-2.5 rounded-xl font-arcade text-2xl leading-none">
+                ⚔️ JOIN ARENA
+              </button>
+            </div>
+
+            <p id="onlineHelpText" class="text-[11px] text-amber-100/65 text-center">
+              Tip: Both players use their own active rooster &amp; upgraded stats. Guest uses WASD/Arrows + F/G/H/R or J/K/L/U (or touch controls).
+            </p>
+          </div>
+
+          <!-- Connected Versus Preview (Shown when connected) -->
+          <div id="onlineVersusPanel" class="hidden h-full flex flex-col justify-between gap-2">
+            <div class="flex items-center justify-between border-b border-amber-500/20 pb-1.5">
+              <span class="font-arcade text-2xl text-emerald-300 leading-none">CHALLENGER CONNECTED!</span>
+              <span id="onlineRoleTag" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-900/60 border border-emerald-400/50 text-emerald-200">
+                HOST (P1)
+              </span>
+            </div>
+
+            <div class="grid grid-cols-11 items-center gap-1 flex-1 min-h-0">
+              <div class="col-span-5 flex flex-col items-center bg-red-950/30 border border-red-500/35 rounded-xl p-1.5 h-full justify-between">
+                <span class="text-[10px] font-bold text-red-300 uppercase">HOST (P1)</span>
+                <canvas id="onlineP1Canvas" width="110" height="86" class="max-w-full h-auto"></canvas>
+                <span id="onlineP1Name" class="font-arcade text-xl text-amber-100 leading-none">Nati Kemp</span>
+              </div>
+              <div class="col-span-1 text-center font-arcade text-3xl text-amber-400 gold-glow leading-none">VS</div>
+              <div class="col-span-5 flex flex-col items-center bg-blue-950/30 border border-blue-500/35 rounded-xl p-1.5 h-full justify-between">
+                <span class="text-[10px] font-bold text-blue-300 uppercase">GUEST (P2)</span>
+                <canvas id="onlineP2Canvas" width="110" height="86" class="max-w-full h-auto"></canvas>
+                <span id="onlineP2Name" class="font-arcade text-xl text-amber-100 leading-none">Bolla</span>
+              </div>
+            </div>
+
+            <div id="onlineHostStartWrap">
+              <button onclick="OnlineNet.startOnlineMatch()"
+                class="btn-arcade btn-crimson fight-cta-glow w-full py-2.5 rounded-xl font-arcade text-3xl tracking-wider leading-none flex items-center justify-center gap-2">
+                <span>🥁</span><span>START ONLINE FIGHT</span><span>⚔️</span>
+              </button>
+            </div>
+            <div id="onlineGuestWaitWrap" class="hidden text-center py-2 rounded-xl bg-black/45 border border-amber-500/30 text-xs text-amber-200 font-semibold animate-pulse">
+              ⏳ Connected! Waiting for Host to press START ONLINE FIGHT...
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1727,6 +1844,11 @@
           if (isCrit) lbl = `CRIT ${lbl}!`;
           if (this.combo >= 2) lbl += ` (${this.combo}x)`;
           Particles.spawnText(opp.x, opp.y - 86, lbl, isCrit || this.state === 'special' ? '#fde047' : '#fca5a5', this.state === 'peck' ? 24 : 30);
+          GameEngine.emitOnlineEvent({ kind: 'hit', hx, hy, oppX: opp.x, oppY: opp.y, oppBreedId: opp.breed.id, heavy: this.state !== 'peck', lbl, blocked: false });
+        }
+
+        if (blocked) {
+          GameEngine.emitOnlineEvent({ kind: 'hit', hx, hy, oppX: opp.x, oppY: opp.y, oppBreedId: opp.breed.id, heavy: false, lbl: `GUARD -${dmg}`, blocked: true });
         }
 
         if (opp.hp <= 0) {
@@ -1793,7 +1915,7 @@
       let shakeMag = 0;
 
       let matchCfg = {
-        mode: '1p', // 1p, 2p, bet
+        mode: '1p', // 1p, 2p, bet, online_host, online_guest
         tierId: 0,
         wager: 0,
         venueName: 'VILLAGE KATTA',
@@ -1805,6 +1927,8 @@
 
       const keys = {};
       const touchState = {};
+      let remoteInput = { left: false, right: false, jump: false, peck: false, spur: false, guard: false, special: false };
+      let netSyncAccum = 0;
 
       function init() {
         canvas = document.getElementById('gameCanvas');
@@ -1842,6 +1966,17 @@
       }
 
       function getPlayerInput(num) {
+        if (matchCfg.mode === 'online_guest') {
+          return {
+            left: !!(keys['KeyA'] || keys['ArrowLeft'] || touchState['p1_left']),
+            right: !!(keys['KeyD'] || keys['ArrowRight'] || touchState['p1_right']),
+            jump: !!(keys['KeyW'] || keys['ArrowUp'] || touchState['p1_jump']),
+            peck: !!(keys['KeyF'] || keys['KeyJ'] || touchState['p1_peck']),
+            spur: !!(keys['KeyG'] || keys['KeyK'] || touchState['p1_spur']),
+            guard: !!(keys['KeyH'] || keys['KeyL'] || touchState['p1_guard']),
+            special: !!(keys['KeyR'] || keys['KeyU'] || touchState['p1_special'])
+          };
+        }
         if (num === 1) {
           return {
             left: !!(keys['KeyA'] || touchState['p1_left']),
@@ -1872,7 +2007,8 @@
 
         // Configure Touch Overlays
         const dualTouch = document.getElementById('chkDualTouch').checked;
-        document.getElementById('touchOverlay1P').classList.toggle('hidden', mode !== '1p');
+        const show1POverlay = (mode === '1p' || mode === 'online_host' || mode === 'online_guest');
+        document.getElementById('touchOverlay1P').classList.toggle('hidden', !show1POverlay);
         document.getElementById('touchOverlay2P').classList.toggle('hidden', !(mode === '2p' && dualTouch));
         document.getElementById('liveBetPill').classList.toggle('hidden', mode !== 'bet');
 
@@ -1885,6 +2021,9 @@
       }
 
       function exitToHub() {
+        if (matchCfg.mode === 'online_host' || matchCfg.mode === 'online_guest') {
+          OnlineNet.send({ type: 'peer_left' });
+        }
         active = false;
         paused = false;
         matchState = 'idle';
@@ -1959,6 +2098,107 @@
         beginCountdown();
       }
 
+      function launchOnlineHost(hostCfg, guestCfg) {
+        Particles.clear();
+        remoteInput = { left: false, right: false, jump: false, peck: false, spur: false, guard: false, special: false };
+        matchCfg = { mode: 'online_host', venueName: 'ONLINE 1v1 • HOST (P1)' };
+        p1 = new Fighter({
+          x: 240, facing: 1, breedId: hostCfg.breedId,
+          stats: hostCfg.stats, isAI: false, label: 'YOU (HOST)'
+        });
+        p2 = new Fighter({
+          x: 760, facing: -1, breedId: guestCfg.breedId,
+          stats: guestCfg.stats, isAI: false, label: 'GUEST (P2)'
+        });
+        enterFullscreenArena('online_host');
+        beginCountdown();
+      }
+
+      function launchOnlineGuest(hostCfg, guestCfg) {
+        Particles.clear();
+        matchCfg = { mode: 'online_guest', venueName: 'ONLINE 1v1 • GUEST (P2)' };
+        p1 = new Fighter({
+          x: 240, facing: 1, breedId: hostCfg.breedId,
+          stats: hostCfg.stats, isAI: false, label: 'HOST (P1)'
+        });
+        p2 = new Fighter({
+          x: 760, facing: -1, breedId: guestCfg.breedId,
+          stats: guestCfg.stats, isAI: false, label: 'YOU (GUEST)'
+        });
+        enterFullscreenArena('online_guest');
+        beginCountdown();
+      }
+
+      function setRemoteInput(inp) {
+        if (inp) remoteInput = inp;
+      }
+
+      function emitOnlineEvent(ev) {
+        if (matchCfg.mode === 'online_host') {
+          OnlineNet.send({ type: 'event', ev });
+        }
+      }
+
+      function applyOnlineEvent(ev) {
+        if (matchCfg.mode !== 'online_guest' || !ev) return;
+        if (ev.kind === 'hit') {
+          if (ev.blocked) {
+            AudioEngine.playBlock();
+            Particles.spawnSparks(ev.hx, ev.hy, '#93c5fd', 7);
+            Particles.spawnText(ev.oppX, ev.oppY - 84, ev.lbl, '#93c5fd', 22);
+          } else {
+            const b = getBreedById(ev.oppBreedId);
+            if (ev.heavy) {
+              AudioEngine.playHeavyHit();
+              triggerJuice(0.06, 10);
+              Particles.spawnFeathers(ev.hx, ev.hy, b, 10);
+              Particles.spawnSparks(ev.hx, ev.hy, '#ef4444', 12);
+            } else {
+              AudioEngine.playPeck();
+              triggerJuice(0.03, 5);
+              Particles.spawnFeathers(ev.hx, ev.hy, b, 5);
+              Particles.spawnSparks(ev.hx, ev.hy, '#fde047', 8);
+            }
+            Particles.spawnText(ev.oppX, ev.oppY - 86, ev.lbl, '#fde047', ev.heavy ? 30 : 24);
+          }
+        } else if (ev.kind === 'ko') {
+          matchState = 'over';
+          AudioEngine.playCrowdCheer();
+          triggerJuice(0.12, 14);
+          setTimeout(() => showPostMatch(ev.winnerNum), 900);
+        }
+      }
+
+      function applyHostSnapshot(snap) {
+        if (matchCfg.mode !== 'online_guest' || !p1 || !p2 || !snap) return;
+        roundTimer = snap.rt;
+        countdownTimer = snap.ct;
+        matchState = snap.ms;
+        const applyF = (f, s) => {
+          f.x = s.x; f.y = s.y; f.vx = s.vx; f.vy = s.vy;
+          f.facing = s.f; f.state = s.st; f.hp = s.hp; f.sta = s.sa; f.fury = s.fu;
+          f.flashTimer = s.fl;
+        };
+        applyF(p1, snap.p1);
+        applyF(p2, snap.p2);
+      }
+
+      function handleOnlineDisconnect(reason) {
+        if (!active || (matchCfg.mode !== 'online_host' && matchCfg.mode !== 'online_guest')) return;
+        matchState = 'over';
+        document.getElementById('resSub').textContent = 'CONNECTION LOST';
+        document.getElementById('resTitle').textContent = 'DISCONNECTED';
+        document.getElementById('resDetail').textContent = reason || 'Opponent left the online Katta ring.';
+        const wrap = document.getElementById('resActions');
+        wrap.innerHTML = '';
+        const b = document.createElement('button');
+        b.className = 'btn-arcade btn-gold px-6 py-2 rounded-xl font-arcade text-2xl leading-none';
+        b.textContent = 'RETURN TO HUB';
+        b.onclick = () => exitToHub();
+        wrap.appendChild(b);
+        document.getElementById('resultOverlay').classList.remove('hidden');
+      }
+
       function beginCountdown() {
         roundTimer = 60;
         countdownTimer = 2.0;
@@ -1985,7 +2225,11 @@
         matchState = 'over';
         AudioEngine.playCrowdCheer();
         triggerJuice(0.14, 15);
-        setTimeout(() => showPostMatch(winner === p1 ? 1 : 2), 950);
+        const wNum = winner === p1 ? 1 : 2;
+        if (matchCfg.mode === 'online_host') {
+          emitOnlineEvent({ kind: 'ko', winnerNum: wNum });
+        }
+        setTimeout(() => showPostMatch(wNum), 950);
       }
 
       function showPostMatch(winnerNum) {
@@ -2048,6 +2292,24 @@
             detail = `Your ₹${matchCfg.wager} virtual wager missed. Roll a fresh matchup in the Bet Ring!`;
           }
           actions.push({ text: 'RETURN TO HUB', cls: 'btn-gold', fn: () => { BetRing.rollMatchup(); exitToHub(); } });
+        } else if (matchCfg.mode === 'online_host' || matchCfg.mode === 'online_guest') {
+          const isHost = matchCfg.mode === 'online_host';
+          const iWon = (isHost && winnerNum === 1) || (!isHost && winnerNum === 2);
+          const reward = iWon ? 250 : 60;
+          if (iWon) State.wins += 1; else State.losses += 1;
+          State.coins += reward;
+          SaveManager.save();
+          AudioEngine.playCoin();
+
+          sub = 'ONLINE 1v1 COMPLETE';
+          title = iWon ? 'ONLINE VICTORY!' : 'DEFEATED';
+          detail = iWon
+            ? `You dominated the online Coastal Katta! Earned ₹${reward} virtual coins.`
+            : `Tough online bout! Earned ₹${reward} participation coins.`;
+          if (isHost) {
+            actions.push({ text: 'REMATCH', cls: 'btn-gold', fn: () => OnlineNet.startOnlineMatch() });
+          }
+          actions.push({ text: 'RETURN TO HUB', cls: 'btn-crimson', fn: () => exitToHub() });
         }
 
         document.getElementById('resSub').textContent = sub;
@@ -2153,8 +2415,9 @@
         const b1 = document.getElementById('hudP1Special');
         const b1b = document.getElementById('hudP1Special2P');
         const b2b = document.getElementById('hudP2Special2P');
-        if (p1 && b1) {
-          const r = p1.fury >= 100 && matchState === 'fighting';
+        const myFighter = matchCfg.mode === 'online_guest' ? p2 : p1;
+        if (myFighter && b1) {
+          const r = myFighter.fury >= 100 && matchState === 'fighting';
           b1.classList.toggle('fury-ready', r); b1.style.opacity = r ? '1' : '0.45';
         }
         if (p1 && b1b) {
@@ -2182,31 +2445,64 @@
               countdownTimer -= dt;
               if (p1) p1.animTime += dt;
               if (p2) p2.animTime += dt;
-              if (countdownTimer <= 0) {
+              if (countdownTimer <= 0 && matchCfg.mode !== 'online_guest') {
                 matchState = 'fighting';
                 Particles.spawnText(LOGICAL_W / 2, LOGICAL_H / 2 - 20, 'FIGHT!', '#fde047', 66);
               }
             } else if (matchState === 'fighting') {
-              roundTimer = Math.max(0, roundTimer - dt);
-              p1.update(dt, p2, getPlayerInput(1));
-              p2.update(dt, p1, getPlayerInput(2));
+              if (matchCfg.mode === 'online_guest') {
+                // Guest sends local inputs to Host and animates locally
+                if (p1) p1.animTime += dt;
+                if (p2) p2.animTime += dt;
+                netSyncAccum += dt;
+                if (netSyncAccum >= 0.025) {
+                  netSyncAccum = 0;
+                  OnlineNet.send({ type: 'input', inp: getPlayerInput(2) });
+                }
+              } else {
+                roundTimer = Math.max(0, roundTimer - dt);
+                p1.update(dt, p2, getPlayerInput(1));
+                const p2Inp = matchCfg.mode === 'online_host' ? remoteInput : getPlayerInput(2);
+                p2.update(dt, p1, p2Inp);
 
-              // Prevent overlap
-              const dx = p2.x - p1.x;
-              if (Math.abs(dx) < 42 && Math.abs(p2.y - p1.y) < 40) {
-                const push = (42 - Math.abs(dx)) * 0.5;
-                const d = dx >= 0 ? 1 : -1;
-                p1.x -= d * push; p2.x += d * push;
-              }
+                // Prevent overlap
+                const dx = p2.x - p1.x;
+                if (Math.abs(dx) < 42 && Math.abs(p2.y - p1.y) < 40) {
+                  const push = (42 - Math.abs(dx)) * 0.5;
+                  const d = dx >= 0 ? 1 : -1;
+                  p1.x -= d * push; p2.x += d * push;
+                }
 
-              if (roundTimer <= 0 && matchState === 'fighting') {
-                matchState = 'over';
-                showPostMatch((p1.hp / p1.maxHp) >= (p2.hp / p2.maxHp) ? 1 : 2);
+                if (roundTimer <= 0 && matchState === 'fighting') {
+                  matchState = 'over';
+                  const wNum = (p1.hp / p1.maxHp) >= (p2.hp / p2.maxHp) ? 1 : 2;
+                  if (matchCfg.mode === 'online_host') emitOnlineEvent({ kind: 'ko', winnerNum: wNum });
+                  showPostMatch(wNum);
+                }
               }
             } else if (matchState === 'over') {
               if (p1) p1.animTime += dt;
               if (p2) p2.animTime += dt;
             }
+
+            // Host broadcasts compact state snapshot at ~40Hz
+            if (matchCfg.mode === 'online_host' && p1 && p2) {
+              netSyncAccum += dt;
+              if (netSyncAccum >= 0.025) {
+                netSyncAccum = 0;
+                const pack = f => ({
+                  x: Math.round(f.x), y: Math.round(f.y),
+                  vx: Math.round(f.vx), vy: Math.round(f.vy),
+                  f: f.facing, st: f.state, hp: f.hp, sa: Math.round(f.sta),
+                  fu: Math.round(f.fury), fl: +f.flashTimer.toFixed(2)
+                });
+                OnlineNet.send({
+                  type: 'state',
+                  snap: { rt: +roundTimer.toFixed(1), ct: +countdownTimer.toFixed(2), ms: matchState, p1: pack(p1), p2: pack(p2) }
+                });
+              }
+            }
+
             Particles.update(dt);
           }
           if (shakeTime > 0) shakeTime -= dt;
@@ -2233,9 +2529,214 @@
       }
 
       return {
-        init, launchFromFightTab, launchBetMatch, togglePause,
-        exitToHub, triggerJuice, onKO
+        init, launchFromFightTab, launchBetMatch, launchOnlineHost, launchOnlineGuest,
+        setRemoteInput, emitOnlineEvent, applyOnlineEvent, applyHostSnapshot,
+        handleOnlineDisconnect, togglePause, exitToHub, triggerJuice, onKO
       };
+    })();
+
+    /*************************************************************************
+     * 8B. PEERJS ONLINE 1v1 NETWORK MANAGER
+     *************************************************************************/
+    const OnlineNet = (() => {
+      let peer = null;
+      let conn = null;
+      let role = null; // 'host' | 'guest'
+      let roomCode = '';
+      let hostCfg = null;
+      let guestCfg = null;
+
+      function myProfile() {
+        return {
+          breedId: State.activeBreedId,
+          stats: getEffectiveStats(State.activeBreedId, 0, true)
+        };
+      }
+
+      function setStatus(text, tone = 'idle') {
+        const badge = document.getElementById('onlineStatusBadge');
+        if (!badge) return;
+        badge.textContent = text;
+        badge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ' + (
+          tone === 'connected' ? 'bg-emerald-950/75 border-emerald-400 text-emerald-300'
+          : tone === 'waiting' ? 'bg-amber-950/75 border-amber-400 text-amber-300 animate-pulse'
+          : tone === 'error' ? 'bg-red-950/75 border-red-400 text-red-300'
+          : 'bg-black/55 border-amber-500/35 text-amber-200'
+        );
+      }
+
+      function updateLobbyUI() {
+        const connected = !!(conn && conn.open && hostCfg && guestCfg);
+        document.getElementById('onlineJoinPanel').classList.toggle('hidden', connected);
+        document.getElementById('onlineVersusPanel').classList.toggle('hidden', !connected);
+        document.getElementById('btnDisconnect').classList.toggle('hidden', !peer);
+
+        const copyBtn = document.getElementById('btnCopyCode');
+        copyBtn.disabled = !roomCode;
+        copyBtn.classList.toggle('opacity-45', !roomCode);
+
+        if (connected) {
+          document.getElementById('onlineRoleTag').textContent = role === 'host' ? 'HOST (P1)' : 'GUEST (P2)';
+          document.getElementById('onlineHostStartWrap').classList.toggle('hidden', role !== 'host');
+          document.getElementById('onlineGuestWaitWrap').classList.toggle('hidden', role !== 'guest');
+
+          const b1 = getBreedById(hostCfg.breedId);
+          const b2 = getBreedById(guestCfg.breedId);
+          document.getElementById('onlineP1Name').textContent = b1.name;
+          document.getElementById('onlineP2Name').textContent = b2.name;
+
+          const drawMini = (id, b, f) => {
+            const c = document.getElementById(id);
+            if (!c) return;
+            const ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, c.width, c.height);
+            drawProceduralRooster(ctx, 55, 76, f, b, 'idle', 0.4, 0.78, 0, false);
+          };
+          drawMini('onlineP1Canvas', b1, 1);
+          drawMini('onlineP2Canvas', b2, -1);
+        }
+      }
+
+      function bindConnection(c) {
+        conn = c;
+        conn.on('open', () => {
+          setStatus('CONNECTED', 'connected');
+          send({ type: 'hello', profile: myProfile() });
+          UI.toast('Connected to opponent! 🐓');
+        });
+        conn.on('data', msg => {
+          if (!msg || !msg.type) return;
+          if (msg.type === 'hello') {
+            if (role === 'host') {
+              hostCfg = myProfile();
+              guestCfg = msg.profile;
+            } else {
+              hostCfg = msg.profile;
+              guestCfg = myProfile();
+            }
+            updateLobbyUI();
+          } else if (msg.type === 'start_match') {
+            hostCfg = msg.hostCfg;
+            guestCfg = msg.guestCfg;
+            GameEngine.launchOnlineGuest(hostCfg, guestCfg);
+          } else if (msg.type === 'input') {
+            GameEngine.setRemoteInput(msg.inp);
+          } else if (msg.type === 'state') {
+            GameEngine.applyHostSnapshot(msg.snap);
+          } else if (msg.type === 'event') {
+            GameEngine.applyOnlineEvent(msg.ev);
+          } else if (msg.type === 'peer_left') {
+            GameEngine.handleOnlineDisconnect('Opponent returned to the Hub.');
+          }
+        });
+        conn.on('close', () => {
+          setStatus('DISCONNECTED', 'error');
+          GameEngine.handleOnlineDisconnect('Connection closed by peer.');
+          conn = null;
+          hostCfg = null; guestCfg = null;
+          updateLobbyUI();
+        });
+        conn.on('error', () => {
+          setStatus('ERROR', 'error');
+          GameEngine.handleOnlineDisconnect('Network connection error.');
+        });
+      }
+
+      function hostRoom() {
+        if (typeof Peer === 'undefined') {
+          UI.toast('PeerJS failed to load. Check internet connection.');
+          return;
+        }
+        disconnect(true);
+        role = 'host';
+        roomCode = 'KATTA-' + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('onlineRoomCode').textContent = roomCode;
+        setStatus('CREATING...', 'waiting');
+
+        peer = new Peer(roomCode);
+        peer.on('open', id => {
+          roomCode = id;
+          document.getElementById('onlineRoomCode').textContent = id;
+          setStatus('WAITING FOR CHALLENGER', 'waiting');
+          updateLobbyUI();
+          UI.toast(`Room ${id} ready! Share the code.`);
+        });
+        peer.on('connection', c => {
+          if (conn && conn.open) { c.close(); return; }
+          bindConnection(c);
+        });
+        peer.on('error', err => {
+          setStatus('ERROR', 'error');
+          UI.toast('Online error: ' + (err.type || 'Could not create room'));
+        });
+      }
+
+      function joinRoom() {
+        if (typeof Peer === 'undefined') {
+          UI.toast('PeerJS failed to load. Check internet connection.');
+          return;
+        }
+        const target = (document.getElementById('joinCodeInput').value || '').trim().toUpperCase();
+        if (!target || target.length < 5) {
+          UI.toast('Enter a valid room code like KATTA-1234');
+          return;
+        }
+        disconnect(true);
+        role = 'guest';
+        setStatus('CONNECTING...', 'waiting');
+
+        peer = new Peer();
+        peer.on('open', () => {
+          const c = peer.connect(target, { reliable: true });
+          bindConnection(c);
+        });
+        peer.on('error', err => {
+          setStatus('NOT FOUND', 'error');
+          UI.toast('Could not join room: ' + (err.type || 'Check code'));
+        });
+      }
+
+      function startOnlineMatch() {
+        if (role !== 'host' || !conn || !conn.open) return;
+        hostCfg = myProfile();
+        send({ type: 'start_match', hostCfg, guestCfg });
+        GameEngine.launchOnlineHost(hostCfg, guestCfg);
+      }
+
+      function send(payload) {
+        if (conn && conn.open) {
+          try { conn.send(payload); } catch (e) {}
+        }
+      }
+
+      function copyCode() {
+        if (!roomCode) return;
+        const ta = document.createElement('textarea');
+        ta.value = roomCode;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          UI.toast(`Copied ${roomCode}! 📋`);
+        } catch (e) {
+          UI.toast('Copy failed — share: ' + roomCode);
+        }
+        document.body.removeChild(ta);
+      }
+
+      function disconnect(silent = false) {
+        if (conn) { try { conn.close(); } catch (e) {} conn = null; }
+        if (peer) { try { peer.destroy(); } catch (e) {} peer = null; }
+        role = null; roomCode = ''; hostCfg = null; guestCfg = null;
+        document.getElementById('onlineRoomCode').textContent = 'KATTA- ----';
+        setStatus('IDLE', 'idle');
+        updateLobbyUI();
+        if (!silent) UI.toast('Left Online Room');
+      }
+
+      return { hostRoom, joinRoom, startOnlineMatch, send, copyCode, disconnect };
     })();
 
     /*************************************************************************
@@ -2570,7 +3071,7 @@
           b.classList.toggle('btn-gold', on);
           b.classList.toggle('btn-dark', !on);
         });
-        ['fight', 'roster', 'train', 'work', 'bet'].forEach(t => {
+        ['fight', 'online', 'roster', 'train', 'work', 'bet'].forEach(t => {
           document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
         });
         if (tab === 'fight') this.renderFightTab();
